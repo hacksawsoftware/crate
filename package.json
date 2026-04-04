@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "build": "pnpm --filter crate build",
+    "build:create": "pnpm --filter create-crate build",
     "dev": "pnpm --filter crate dev",
     "test": "pnpm --filter crate test",
     "example": "pnpm --filter crate example"
