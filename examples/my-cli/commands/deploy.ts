@@ -17,7 +17,7 @@ export const meta = {
   ],
 };
 
-export default async function ({ args, flags, log }) {
+export default async function ({ args, flags, log }: { args: [string]; flags: { force: boolean; region?: string; tags: string[] }; log: (...args: unknown[]) => void }) {
   const [target] = args;
   
   log(`🚀 Deploying to ${target}...`);

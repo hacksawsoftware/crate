@@ -11,7 +11,7 @@ export const meta = {
   examples: ["my-cli", "my-cli --verbose"],
 };
 
-export default async function ({ log, flags }) {
+export default async function ({ log, flags }: { log: (...args: unknown[]) => void; flags: { verbose: boolean } }) {
   if (flags.verbose) {
     log("Running in verbose mode");
   }

@@ -1,0 +1,37 @@
+{
+  "name": "@hacksaw/crate",
+  "version": "0.1.0",
+  "description": "File-based routing CLI metaframework built on @bomb.sh/args",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "node --test dist/**/*.test.js",
+    "example": "node --import ./dist/register.js examples/my-cli/cli.ts"
+  },
+  "keywords": [
+    "cli",
+    "framework",
+    "routing",
+    "typescript"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@bomb.sh/args": "^0.3.1",
+    "@standard-schema/spec": "^1.1.0",
+    "zod-to-json-schema": "^3.25.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.5.0",
+    "zod": "4.3.6"
+  }
+}

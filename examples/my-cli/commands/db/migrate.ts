@@ -11,7 +11,7 @@ export const meta = {
   examples: ["my-cli db migrate up", "my-cli db migrate down --dry-run"],
 };
 
-export default async function ({ args, flags, log, error }) {
+export default async function ({ args, flags, log, error }: { args: [string]; flags: { dryRun: boolean }; log: (...args: unknown[]) => void; error: (...args: unknown[]) => void }) {
   const [direction] = args;
   
   if (direction !== "up" && direction !== "down") {

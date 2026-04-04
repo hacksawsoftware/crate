@@ -1,38 +1,22 @@
 {
-  "name": "crate",
+  "name": "crate-monorepo",
   "version": "0.1.0",
-  "description": "File-based routing CLI metaframework built on @bomb.sh/args",
+  "private": true,
+  "description": "Monorepo for crate - File-based routing CLI metaframework",
   "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "exports": {
-    ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
-    }
-  },
   "scripts": {
-    "build": "tsc",
-    "dev": "tsc --watch",
-    "test": "node --test dist/**/*.test.js",
-    "example": "node --import ./dist/register.js examples/my-cli/cli.ts"
+    "build": "pnpm --filter crate build",
+    "dev": "pnpm --filter crate dev",
+    "test": "pnpm --filter crate test",
+    "example": "pnpm --filter crate example"
   },
   "keywords": [
     "cli",
     "framework",
     "routing",
-    "typescript"
+    "typescript",
+    "monorepo"
   ],
   "license": "MIT",
-  "dependencies": {
-    "@bomb.sh/args": "^0.3.1",
-    "@standard-schema/spec": "^1.1.0",
-    "zod-to-json-schema": "^3.25.2"
-  },
-  "devDependencies": {
-    "@types/node": "^22.0.0",
-    "typescript": "^5.5.0",
-    "zod": "4.3.6"
-  },
   "packageManager": "pnpm@10.15.1"
 }

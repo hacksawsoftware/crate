@@ -1,4 +1,4 @@
-import { run } from "../../dist/index.js";
+import { run } from "@hacksaw/crate";
 
 run({
   name: "my-cli",

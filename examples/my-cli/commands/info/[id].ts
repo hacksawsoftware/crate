@@ -12,7 +12,7 @@ export const meta = {
   examples: ["my-cli info abc123", "my-cli info abc123 --json"],
 };
 
-export default async function ({ flags, log }) {
+export default async function ({ flags, log }: { flags: { json: boolean; id?: unknown }; log: (...args: unknown[]) => void }) {
   // Dynamic route param [id] is available via flags.id
   const id = flags.id as string;
   

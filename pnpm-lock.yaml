@@ -6,7 +6,28 @@ settings:
 
 importers:
 
-  .:
+  .: {}
+
+  examples/my-cli:
+    dependencies:
+      '@hacksaw/crate':
+        specifier: workspace:*
+        version: link:../../packages/crate
+      zod:
+        specifier: 4.3.6
+        version: 4.3.6
+    devDependencies:
+      '@types/node':
+        specifier: ^22.0.0
+        version: 22.19.17
+      jiti:
+        specifier: ^2.6.1
+        version: 2.6.1
+      typescript:
+        specifier: ^5.5.0
+        version: 5.9.3
+
+  packages/crate:
     dependencies:
       '@bomb.sh/args':
         specifier: ^0.3.1
@@ -39,6 +60,10 @@ packages:
   '@types/node@22.19.17':
     resolution: {integrity: sha512-wGdMcf+vPYM6jikpS/qhg6WiqSV/OhG+jeeHT/KlVqxYfD40iYJf9/AE1uQxVWFvU7MipKRkRv8NSHiCGgPr8Q==}
 
+  jiti@2.6.1:
+    resolution: {integrity: sha512-ekilCSN1jwRvIbgeg/57YFh8qQDNbwDb9xT/qu2DAHbFFZUicIl4ygVaAvzveMhMVr3LnpSKTNnwt8PoOfmKhQ==}
+    hasBin: true
+
   typescript@5.9.3:
     resolution: {integrity: sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw==}
     engines: {node: '>=14.17'}
@@ -64,6 +89,8 @@ snapshots:
   '@types/node@22.19.17':
     dependencies:
       undici-types: 6.21.0
+
+  jiti@2.6.1: {}
 
   typescript@5.9.3: {}
 

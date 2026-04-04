@@ -1,0 +1,23 @@
+{
+  "name": "my-cli-example",
+  "version": "1.0.0",
+  "description": "Example CLI demonstrating crate file-based routing",
+  "type": "module",
+  "bin": {
+    "my-cli": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "start": "node ./dist/cli.js"
+  },
+  "dependencies": {
+    "@hacksaw/crate": "workspace:*",
+    "zod": "4.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "jiti": "^2.6.1",
+    "typescript": "^5.5.0"
+  }
+}
