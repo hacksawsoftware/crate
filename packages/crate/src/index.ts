@@ -11,12 +11,12 @@ import type {
 } from "./types.js";
 import { scanCommands } from "./scanner.js";
 import { matchRoute, findRootCommand, type RouteMatch } from "./router.js";
-import { validateWithSchema, extractSchemaFlags, getSchemaVendor } from "./schema.js";
+import { validateWithSchema, extractSchemaFlags, getSchemaVendor, ValidationError } from "./schema.js";
 
 // Re-exports
 export { scanCommands } from "./scanner.js";
 export { matchRoute, findRootCommand } from "./router.js";
-export { validateWithSchema, extractSchemaFlags, getSchemaVendor } from "./schema.js";
+export { validateWithSchema, extractSchemaFlags, getSchemaVendor, ValidationError } from "./schema.js";
 export { defineCommand } from "./define.js";
 export type { CliConfig, CommandDefinition, Context, CommandRoute, ArgTypes, JSONSchemaGenerator };
 
@@ -73,7 +73,8 @@ function createContext(
  */
 async function parseCommand(
   command: CommandDefinition,
-  remainingArgs: string[]
+  remainingArgs: string[],
+  commandName: string
 ): Promise<{ args: unknown[]; flags: Record<string, unknown> }> {
   // Extract flag types from schema (auto-detect via JSON Schema or use explicit config)
   const extraction = extractSchemaFlags(command.flags, {
@@ -118,12 +119,12 @@ async function parseCommand(
   
   // Validate flags if schema provided
   if (command.flags) {
-    await validateWithSchema(command.flags, flags);
+    await validateWithSchema(command.flags, flags, 'flags', commandName);
   }
   
   // Validate args if schema provided
   if (command.args) {
-    await validateWithSchema(command.args, positional);
+    await validateWithSchema(command.args, positional, 'args', commandName);
   }
   
   return { args: positional, flags };
@@ -135,9 +136,17 @@ async function parseCommand(
 async function executeCommand(
   command: CommandDefinition,
   match: RouteMatch,
-  rawArgv: string[]
+  rawArgv: string[],
+  config: CliConfig
 ): Promise<void> {
-  const { args, flags } = await parseCommand(command, match.remainingArgs);
+  // Build command name for error messages
+  const commandName = match.route.segments
+    .filter(s => s !== 'index')
+    .map(s => s.startsWith('[') && s.endsWith(']') ? `<${s.slice(1, -1)}>` : s)
+    .join(' ');
+  const fullCommandName = `${config.name} ${commandName}`.trim();
+  
+  const { args, flags } = await parseCommand(command, match.remainingArgs, fullCommandName);
   
   // Add path params to flags for easy access
   const mergedFlags = { ...flags, ...match.params };
@@ -206,54 +215,65 @@ function printCommandHelp(
  * Run the CLI
  */
 export async function run(config: CliConfig): Promise<void> {
-  const commandsDir = config.commandsDir ?? "commands";
-  
-  // Scan for commands
-  const routes = await scanCommands(commandsDir);
-  
-  if (routes.length === 0) {
-    console.error(`No commands found in ${commandsDir}`);
-    process.exit(1);
-  }
-  
-  // Get argv (skip node and script path)
-  const argv = process.argv.slice(2);
-  
-  // Try to match a route
-  const match = matchRoute(routes, argv);
-  
-  if (!match) {
-    // Check for help flags
-    if (argv.includes("--help") || argv.includes("-h")) {
+  try {
+    const commandsDir = config.commandsDir ?? "commands";
+    
+    // Scan for commands
+    const routes = await scanCommands(commandsDir);
+    
+    if (routes.length === 0) {
+      console.error(`No commands found in ${commandsDir}`);
+      process.exit(1);
+    }
+    
+    // Get argv (skip node and script path)
+    const argv = process.argv.slice(2);
+    
+    // Try to match a route
+    const match = matchRoute(routes, argv);
+    
+    if (!match) {
+      // Check for help flags
+      if (argv.includes("--help") || argv.includes("-h")) {
+        printHelp(config, routes);
+        return;
+      }
+      
+      // Try root command
+      const rootRoute = findRootCommand(routes);
+      if (rootRoute) {
+        const command = await loadCommand(rootRoute.filePath);
+        await executeCommand(command, { 
+          route: rootRoute,
+          params: {},
+          remainingArgs: argv,
+        }, argv, config);
+        return;
+      }
+      
+      console.error(`Unknown command: ${argv.join(" ")}`);
       printHelp(config, routes);
+      process.exit(1);
+    }
+    
+    // Check for help
+    if (match.remainingArgs.includes("--help") || match.remainingArgs.includes("-h")) {
+      const command = await loadCommand(match.route.filePath);
+      printCommandHelp(config, match.route, command);
       return;
     }
     
-    // Try root command
-    const rootRoute = findRootCommand(routes);
-    if (rootRoute) {
-      const command = await loadCommand(rootRoute.filePath);
-      await executeCommand(command, { 
-        route: rootRoute,
-        params: {},
-        remainingArgs: argv,
-      }, argv);
-      return;
-    }
-    
-    console.error(`Unknown command: ${argv.join(" ")}`);
-    printHelp(config, routes);
-    process.exit(1);
-  }
-  
-  // Check for help
-  if (match.remainingArgs.includes("--help") || match.remainingArgs.includes("-h")) {
+    // Load and execute the matched command
     const command = await loadCommand(match.route.filePath);
-    printCommandHelp(config, match.route, command);
-    return;
+    await executeCommand(command, match, argv, config);
+  } catch (error) {
+    // Handle validation errors with user-friendly output (no stack trace)
+    if (error instanceof ValidationError) {
+      console.error(error.message);
+      process.exit(1);
+    }
+    
+    // Re-throw other errors to show stack trace for debugging
+    throw error;
   }
-  
-  // Load and execute the matched command
-  const command = await loadCommand(match.route.filePath);
-  await executeCommand(command, match, argv);
 }

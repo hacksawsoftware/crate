@@ -2,7 +2,7 @@ import { z } from "zod";
 import { defineCommand } from "@hacksaw/crate";
 
 export default defineCommand({
-  args: z.tuple([z.string()]),
+  args: z.tuple([z.literal(["production", "staging"])]),
   flags: z.object({
     force: z.boolean().default(false),
     region: z.string().optional(),

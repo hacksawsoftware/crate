@@ -1,4 +1,144 @@
 import type { StandardSchemaV1 } from "@standard-schema/spec";
+import { styleText } from "node:util";
+
+// ============================================================================
+// Validation Error
+// ============================================================================
+
+/**
+ * Custom error class for validation failures with user-friendly formatting
+ */
+export class ValidationError extends Error {
+  /** The validation issues from Standard Schema */
+  public issues: readonly StandardSchemaV1.Issue[];
+  /** The context being validated ('args' or 'flags') */
+  public context: 'args' | 'flags';
+
+  constructor(
+    issues: readonly StandardSchemaV1.Issue[],
+    context: 'args' | 'flags',
+    commandName?: string
+  ) {
+    const formattedMessage = ValidationError.formatIssues(issues, context, commandName);
+    super(formattedMessage);
+    this.issues = issues;
+    this.context = context;
+    this.name = 'ValidationError';
+  }
+
+  /**
+   * Format validation issues into a user-friendly error message
+   */
+  private static formatIssues(
+    issues: readonly StandardSchemaV1.Issue[],
+    context: 'args' | 'flags',
+    commandName?: string
+  ): string {
+    // Group issues by path for cleaner output
+    const formattedErrors = issues.map(issue => {
+      const path = issue.path?.length ? issue.path.join('.') : '';
+      const userFriendlyPath = this.formatPath(path, context);
+      const message = this.formatMessage(issue.message, path, context);
+      return { path: userFriendlyPath, message, originalPath: path };
+    });
+
+    // Build the error message
+    const lines: string[] = [];
+    
+    // Header based on error type - colored red for error
+    const hasMissingRequired = issues.some(i => 
+      i.message.toLowerCase().includes('required') ||
+      i.message.toLowerCase().includes('expected') && i.message.toLowerCase().includes('received undefined')
+    );
+    
+    const headerText = hasMissingRequired
+      ? `Validation failed: Missing required ${context === 'args' ? 'argument' : 'flag'}`
+      : `Validation failed: Invalid ${context}`;
+    lines.push(styleText('red', headerText));
+    lines.push('');
+
+    // List the specific errors - path in yellow, message in white
+    for (const error of formattedErrors) {
+      if (error.path) {
+        const coloredPath = styleText('yellow', error.path);
+        lines.push(`  ${coloredPath}: ${error.message}`);
+      } else {
+        lines.push(`  ${error.message}`);
+      }
+    }
+
+    // Add help suggestion - dimmed/gray
+    lines.push('');
+    if (commandName) {
+      const dimmed = styleText('dim', `Run \`${commandName} --help\` for usage information.`);
+      lines.push(dimmed);
+    } else {
+      const dimmed = styleText('dim', 'Run with `--help` for usage information.');
+      lines.push(dimmed);
+    }
+
+    return lines.join('\n');
+  }
+
+  /**
+   * Format a path into a user-friendly format
+   */
+  private static formatPath(path: string, context: 'args' | 'flags'): string {
+    if (!path) return '';
+    
+    if (context === 'args') {
+      // For args (tuples), show as args[N]
+      const index = parseInt(path, 10);
+      if (!isNaN(index)) {
+        return `args[${index}]`;
+      }
+      return `args.${path}`;
+    } else {
+      // For flags (objects), show as flags.<name>
+      return `flags.${path}`;
+    }
+  }
+
+  /**
+   * Format a validation message to be more user-friendly
+   */
+  private static formatMessage(message: string, _path: string, _context: 'args' | 'flags'): string {
+    // Make common Zod/validation messages more user-friendly
+    let formatted = message;
+
+    // Clean up "expected X, received Y" messages
+    if (message.includes('expected') && message.includes('received')) {
+      // Extract the expected type
+      const expectedMatch = message.match(/expected (\w+)/i);
+      const receivedMatch = message.match(/received (\w+)/i);
+      
+      if (expectedMatch && receivedMatch) {
+        const expected = expectedMatch[1];
+        const received = receivedMatch[1];
+        
+        if (received === 'undefined') {
+          formatted = `Expected ${expected} but no value was provided`;
+        } else {
+          formatted = `Expected ${expected} but received ${received}`;
+        }
+      }
+    }
+
+    // Clean up "Required" messages
+    if (message.toLowerCase().includes('required')) {
+      formatted = 'This value is required';
+    }
+
+    // Clean up "Invalid input" prefix
+    formatted = formatted.replace(/^Invalid input[:\s]*/i, '');
+    formatted = formatted.replace(/^Invalid\s*/i, '');
+
+    // Capitalize first letter
+    formatted = formatted.charAt(0).toUpperCase() + formatted.slice(1);
+
+    return formatted;
+  }
+}
 
 // ============================================================================
 // Validation
@@ -9,15 +149,14 @@ import type { StandardSchemaV1 } from "@standard-schema/spec";
  */
 export async function validateWithSchema<T>(
   schema: StandardSchemaV1<unknown, T>,
-  value: unknown
+  value: unknown,
+  context: 'args' | 'flags' = 'flags',
+  commandName?: string
 ): Promise<T> {
   const result = await schema["~standard"].validate(value);
 
   if (result.issues) {
-    const messages = result.issues.map((i) =>
-      i.path ? `${i.path.join(".")}: ${i.message}` : i.message
-    );
-    throw new Error(`Validation failed:\n${messages.join("\n")}`);
+    throw new ValidationError(result.issues, context, commandName);
   }
 
   return result.value as T;
