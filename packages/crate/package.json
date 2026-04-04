@@ -15,7 +15,7 @@
     "build": "tsc",
     "dev": "tsc --watch",
     "test": "node --test dist/**/*.test.js",
-    "example": "node --import ./dist/register.js examples/my-cli/cli.ts"
+    "example": "jiti ../../examples/my-cli/cli.ts"
   },
   "keywords": [
     "cli",
@@ -30,6 +30,7 @@
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
+    "jiti": "^2.6.1",
     "typescript": "^5.5.0",
     "zod": "4.3.6"
   }

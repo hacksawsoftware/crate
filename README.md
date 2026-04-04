@@ -71,11 +71,8 @@ export default async function ({ args, flags, log }) {
 ### 3. Run your CLI
 
 ```bash
-# Using tsx (recommended for development)
-npx tsx cli.ts deploy production --force --region us-east-1
-
-# Or with Node.js 22.6+ experimental TypeScript support
-node --import crate/register cli.ts deploy production --force
+# Using jiti (recommended for development)
+npx jiti cli.ts deploy production --force --region us-east-1
 ```
 
 ## File-Based Routing
@@ -277,16 +274,10 @@ Validation failed:
 
 ### Development
 
-Use `tsx` for the best TypeScript experience:
+Use `jiti` for TypeScript execution:
 
 ```bash
-npx tsx cli.ts [command]
-```
-
-Or with the built-in register (Node.js 22.6+):
-
-```bash
-node --import crate/register cli.ts [command]
+npx jiti cli.ts [command]
 ```
 
 ### Production
