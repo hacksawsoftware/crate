@@ -1,4 +1,4 @@
-import type { ArgTypes, CommandDefinition } from "./types.js";
+import type { ArgTypes, CommandDefinition, Context } from "./types.js";
 
 /**
  * Function type for generating JSON Schema from a schema object.
@@ -7,49 +7,95 @@ import type { ArgTypes, CommandDefinition } from "./types.js";
 export type JSONSchemaGenerator = () => object;
 
 /**
- * Helper to define a command with proper type inference
+ * Helper type to extract the output type from a Zod schema.
+ * Uses Zod's internal `_zod.output` property.
+ */
+export type InferZodOutput<T> = T extends { _zod: { output: infer O } } ? O : unknown;
+
+/**
+ * Helper type to extract the output type from a Standard Schema.
+ * Note: Not all libraries populate `~standard.types`. Use library-specific helpers
+ * like `InferZodOutput` for Zod schemas.
+ */
+export type InferOutput<T> = T extends { "~standard": { types: { output: infer O } } }
+  ? O
+  : T extends { _zod: { output: infer O } }  // Fallback for Zod
+    ? O
+    : unknown;
+
+/**
+ * Command definition with type inference from Standard Schema.
+ */
+interface TypedCommandDefinition<
+  TArgs = unknown,
+  TFlags = Record<string, unknown>
+> {
+  args?: { "~standard": { types?: { output: TArgs } } } | { _zod: { output: TArgs } } | undefined;
+  flags?: { "~standard": { types?: { output: TFlags } } } | { _zod: { output: TFlags } } | undefined;
+  argTypes?: ArgTypes;
+  defaults?: Record<string, unknown>;
+  toJSONSchema?: JSONSchemaGenerator;
+  meta?: { description?: string; examples?: string[]; hidden?: boolean };
+  run: (ctx: TypedContext<TArgs, TFlags>) => Promise<void> | void;
+}
+
+/**
+ * Typed context with properly inferred args and flags.
+ */
+type TypedContext<TArgs, TFlags> = Omit<Context, "args" | "flags"> & {
+  args: TArgs;
+  flags: TFlags;
+};
+
+/**
+ * Helper to define a command with proper type inference.
  *
- * Usage:
+ * This helper infers types from your schema library (Zod, Valibot, ArkType, etc.).
+ * The run function receives fully typed args and flags.
+ *
+ * @example Using Zod
  * ```ts
  * import { z } from 'zod';
- * import { defineCommand } from 'crate';
+ * import { defineCommand } from '@hacksaw/crate';
  *
  * export default defineCommand({
- *   args: z.tuple([z.string()]),  // Positional arguments
- *   flags: z.object({             // Flags/options
+ *   args: z.tuple([z.string()]),
+ *   flags: z.object({
  *     force: z.boolean().default(false),
  *     region: z.string().optional(),
  *   }),
  *   meta: {
  *     description: "Deploy the app",
- *     examples: ["mycli deploy production --force"],
  *   },
  *   async run({ args, flags, log }) {
  *     // args: [string]
  *     // flags: { force: boolean, region?: string }
- *     log(`Deploying to ${args[0]}...`);
+ *     const [target] = args;
+ *     log(`Deploying to ${target}...`);
+ *   },
+ * });
+ * ```
+ *
+ * @example Using explicit types (fallback)
+ * ```ts
+ * import { z } from 'zod';
+ * import { defineCommand, type InferZodOutput } from '@hacksaw/crate';
+ *
+ * const argsSchema = z.tuple([z.string()]);
+ * const flagsSchema = z.object({ force: z.boolean() });
+ *
+ * export default defineCommand<InferZodOutput<typeof argsSchema>, InferZodOutput<typeof flagsSchema>>({
+ *   args: argsSchema,
+ *   flags: flagsSchema,
+ *   async run({ args, flags }) {
+ *     // Fully typed!
  *   },
  * });
  * ```
  */
-export function defineCommand<TArgs, TFlags>(def: {
-  args?: { "~standard": { types?: { input: TArgs; output: TArgs } } };
-  flags?: { "~standard": { types?: { input: TFlags; output: TFlags } } };
-  argTypes?: ArgTypes;
-  defaults?: Record<string, unknown>;
-  toJSONSchema?: JSONSchemaGenerator;
-  meta?: { description?: string; examples?: string[]; hidden?: boolean };
-  run: (ctx: {
-    stdin: NodeJS.ReadStream;
-    stdout: NodeJS.WriteStream;
-    stderr: NodeJS.WriteStream;
-    args: TArgs extends unknown[] ? TArgs : never;
-    flags: TFlags extends Record<string, unknown> ? TFlags : never;
-    rawArgv: string[];
-    log: (...args: unknown[]) => void;
-    error: (...args: unknown[]) => void;
-  }) => Promise<void> | void;
-}): CommandDefinition {
+export function defineCommand<TArgs = unknown, TFlags = Record<string, unknown>>(
+  def: TypedCommandDefinition<TArgs, TFlags>
+): CommandDefinition {
   return {
     default: def.run as CommandDefinition["default"],
     args: def.args as CommandDefinition["args"],

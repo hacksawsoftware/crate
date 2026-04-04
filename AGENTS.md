@@ -42,6 +42,37 @@ src/
 ```
 
 ## Usage Pattern
+
+### Using `defineCommand` (Recommended)
+
+The `defineCommand` helper provides full type inference from your schema:
+
+```typescript
+// commands/deploy.ts
+import { z } from "zod";
+import { defineCommand } from "@hacksaw/crate";
+
+export default defineCommand({
+  args: z.tuple([z.string()]),
+  flags: z.object({
+    force: z.boolean().default(false),
+  }),
+  meta: {
+    description: "Deploy the app",
+    examples: ["my-cli deploy production --force"],
+  },
+  async run({ args, flags, log }) {
+    const [target] = args;  // Fully typed as [string]
+    log(`Deploying to ${target}...`);
+    if (flags.force) log("Force mode!");  // Fully typed as boolean
+  },
+});
+```
+
+### Alternative: Direct Exports (Explicit Types)
+
+You can also export schemas and a default function directly (requires explicit type annotations):
+
 ```typescript
 // commands/deploy.ts
 import { z } from "zod";
@@ -55,7 +86,11 @@ export const meta = {
   examples: ["my-cli deploy production --force"],
 };
 
-export default async function ({ args, flags, log }) {
+export default async function ({ args, flags, log }: { 
+  args: [string]; 
+  flags: { force: boolean }; 
+  log: (...args: unknown[]) => void;
+}) {
   const [target] = args;
   log(`Deploying to ${target}...`);
   if (flags.force) log("Force mode!");
@@ -73,26 +108,42 @@ The framework now uses JSON Schema export for library-agnostic schema introspect
 Native support via `.toJSONSchema()` method:
 ```typescript
 import { z } from "zod";
+import { defineCommand } from "@hacksaw/crate";
 
-export const flags = z.object({
-  force: z.boolean().default(false),
-  region: z.string(),
-  tags: z.array(z.string()),
+export default defineCommand({
+  args: z.tuple([z.string()]),
+  flags: z.object({
+    force: z.boolean().default(false),
+    region: z.string(),
+    tags: z.array(z.string()),
+  }),
+  meta: { description: "Deploy the app" },
+  async run({ args, flags }) {
+    // args: [string]
+    // flags: { force: boolean, region: string, tags: string[] }
+  },
 });
-// Auto-detected - no additional setup needed
 ```
 
 #### ArkType
 Native support via `.toJsonSchema()` method:
 ```typescript
 import { type } from "arktype";
+import { defineCommand } from "@hacksaw/crate";
 
-export const flags = type({
-  force: "boolean? = false",
-  region: "string",
-  tags: "string[]? = []",
+export default defineCommand({
+  args: type("[string]"),
+  flags: type({
+    force: "boolean? = false",
+    region: "string",
+    tags: "string[]? = []",
+  }),
+  meta: { description: "Deploy the app" },
+  async run({ args, flags }) {
+    // args: [string]
+    // flags: { force?: boolean, region: string, tags?: string[] }
+  },
 });
-// Auto-detected - no additional setup needed
 ```
 
 #### Valibot
@@ -101,26 +152,50 @@ Requires `@valibot/to-json-schema` package. Since Valibot keeps bundle size mini
 ```typescript
 import * as v from "valibot";
 import { toJsonSchema } from "@valibot/to-json-schema";
+import { defineCommand } from "@hacksaw/crate";
 
-export const flags = v.object({
+const flagsSchema = v.object({
   force: v.optional(v.boolean(), false),
   region: v.string(),
   tags: v.optional(v.array(v.string()), []),
 });
 
-// Attach the JSON Schema generator for auto-detection
-export const toJSONSchema = () => toJsonSchema(flags);
+export default defineCommand({
+  args: v.tuple([v.string()]),
+  flags: flagsSchema,
+  meta: { description: "Deploy the app" },
+  // Attach the JSON Schema generator for auto-detection
+  toJSONSchema: () => toJsonSchema(flagsSchema),
+  async run({ args, flags }) {
+    // args: [string]
+    // flags: { force: boolean, region: string, tags: string[] }
+  },
+});
 ```
 
-Or use explicit configuration:
+Or use explicit configuration (no extra package needed):
 ```typescript
-export const flags = v.object({ ... });
-export const argTypes = {
-  boolean: ["force"],
-  string: ["region"],
-  array: ["tags"],
-};
-export const defaults = { force: false, tags: [] };
+import * as v from "valibot";
+import { defineCommand } from "@hacksaw/crate";
+
+export default defineCommand({
+  args: v.tuple([v.string()]),
+  flags: v.object({
+    force: v.optional(v.boolean(), false),
+    region: v.string(),
+    tags: v.optional(v.array(v.string()), []),
+  }),
+  argTypes: {
+    boolean: ["force"],
+    string: ["region"],
+    array: ["tags"],
+  },
+  defaults: { force: false, tags: [] },
+  async run({ args, flags }) {
+    // args: [string]
+    // flags: { force: boolean, region: string, tags: string[] }
+  },
+});
 ```
 
 <!-- Added: 2026-04-04 -->
@@ -132,26 +207,45 @@ Valibot requires the `@valibot/to-json-schema` package for JSON Schema export si
 ```typescript
 import * as v from "valibot";
 import { toJsonSchema } from "@valibot/to-json-schema";
+import { defineCommand } from "@hacksaw/crate";
 
-export const flags = v.object({
+const flagsSchema = v.object({
   force: v.optional(v.boolean(), false),
   region: v.string(),
   tags: v.optional(v.array(v.string()), []),
 });
 
-// Attach the JSON Schema generator for auto-detection
-export const toJSONSchema = () => toJsonSchema(flags);
+export default defineCommand({
+  flags: flagsSchema,
+  // Attach the JSON Schema generator for auto-detection
+  toJSONSchema: () => toJsonSchema(flagsSchema),
+  async run({ flags }) {
+    // flags.force, flags.region, flags.tags are fully typed
+  },
+});
 ```
 
 ### Option 2: Explicit Configuration (No Extra Package)
 ```typescript
-export const flags = v.object({ ... });
-export const argTypes = {
-  boolean: ["force"],
-  string: ["region"],
-  array: ["tags"],
-};
-export const defaults = { force: false, tags: [] };
+import * as v from "valibot";
+import { defineCommand } from "@hacksaw/crate";
+
+export default defineCommand({
+  flags: v.object({
+    force: v.optional(v.boolean(), false),
+    region: v.string(),
+    tags: v.optional(v.array(v.string()), []),
+  }),
+  argTypes: {
+    boolean: ["force"],
+    string: ["region"],
+    array: ["tags"],
+  },
+  defaults: { force: false, tags: [] },
+  async run({ flags }) {
+    // flags.force, flags.region, flags.tags are fully typed
+  },
+});
 ```
 
 The framework detects JSON Schema via:

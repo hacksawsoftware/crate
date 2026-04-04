@@ -321,103 +321,102 @@ run({
 }
 
 function generateIndexCommand(config: ProjectConfig): string {
+  const cliName = config.name.replace(/^@[^/]+\//, "");
+
   if (config.schemaLibrary === "zod") {
     return `import { z } from "zod";
+import { defineCommand } from "@hacksaw/crate";
 
-export const args = z.tuple([]).optional();
-
-export const flags = z.object({
-  verbose: z.boolean().default(false),
+export default defineCommand({
+  args: z.tuple([]).optional(),
+  flags: z.object({
+    verbose: z.boolean().default(false),
+  }),
+  meta: {
+    description: "Root command - shows help or runs default action",
+    examples: ["${cliName}", "${cliName} --verbose"],
+  },
+  async run({ log, flags }) {
+    if (flags.verbose) {
+      log("Running in verbose mode");
+    }
+    log("Hello from ${config.name}!");
+    log("Run \\`${cliName} --help\\` to see available commands");
+  },
 });
-
-export const meta = {
-  description: "Root command - shows help or runs default action",
-  examples: ["${config.name.replace(/^@[^/]+\//, "")}", "${config.name.replace(/^@[^/]+\//, "")} --verbose"],
-};
-
-export default async function ({ log, flags }: { log: (...args: unknown[]) => void; flags: { verbose: boolean } }) {
-  if (flags.verbose) {
-    log("Running in verbose mode");
-  }
-  log("Hello from ${config.name}!");
-  log("Run \`${config.name.replace(/^@[^/]+\//, "")} --help\` to see available commands");
-}
 `;
   }
 
   if (config.schemaLibrary === "valibot") {
     return `import * as v from "valibot";
+import { defineCommand } from "@hacksaw/crate";
 
-export const args = v.optional(v.tuple([]));
-
-export const flags = v.object({
-  verbose: v.optional(v.boolean(), false),
+export default defineCommand({
+  args: v.optional(v.tuple([])),
+  flags: v.object({
+    verbose: v.optional(v.boolean(), false),
+  }),
+  meta: {
+    description: "Root command - shows help or runs default action",
+    examples: ["${cliName}", "${cliName} --verbose"],
+  },
+  async run({ log, flags }) {
+    if (flags.verbose) {
+      log("Running in verbose mode");
+    }
+    log("Hello from ${config.name}!");
+    log("Run \\`${cliName} --help\\` to see available commands");
+  },
 });
-
-export const meta = {
-  description: "Root command - shows help or runs default action",
-  examples: ["${config.name.replace(/^@[^/]+\//, "")}", "${config.name.replace(/^@[^/]+\//, "")} --verbose"],
-};
-
-export default async function ({ log, flags }: { log: (...args: unknown[]) => void; flags: { verbose: boolean } }) {
-  if (flags.verbose) {
-    log("Running in verbose mode");
-  }
-  log("Hello from ${config.name}!");
-  log("Run \`${config.name.replace(/^@[^/]+\//, "")} --help\` to see available commands");
-}
 `;
   }
 
   if (config.schemaLibrary === "arktype") {
     return `import { type } from "arktype";
+import { defineCommand } from "@hacksaw/crate";
 
-export const args = type("[]?");
-
-export const flags = type({
-  verbose: "boolean? = false",
+export default defineCommand({
+  args: type("[]?"),
+  flags: type({
+    verbose: "boolean? = false",
+  }),
+  meta: {
+    description: "Root command - shows help or runs default action",
+    examples: ["${cliName}", "${cliName} --verbose"],
+  },
+  async run({ log, flags }) {
+    if (flags.verbose) {
+      log("Running in verbose mode");
+    }
+    log("Hello from ${config.name}!");
+    log("Run \\`${cliName} --help\\` to see available commands");
+  },
 });
-
-export const meta = {
-  description: "Root command - shows help or runs default action",
-  examples: ["${config.name.replace(/^@[^/]+\//, "")}", "${config.name.replace(/^@[^/]+\//, "")} --verbose"],
-};
-
-export default async function ({ log, flags }: { log: (...args: unknown[]) => void; flags: { verbose: boolean } }) {
-  if (flags.verbose) {
-    log("Running in verbose mode");
-  }
-  log("Hello from ${config.name}!");
-  log("Run \`${config.name.replace(/^@[^/]+\//, "")} --help\` to see available commands");
-}
 `;
   }
 
   // No schema library - explicit configuration
-  return `export const args = undefined;
+  return `import { defineCommand } from "@hacksaw/crate";
 
-export const flags = undefined;
-
-export const argTypes = {
-  boolean: ["verbose"],
-};
-
-export const defaults = {
-  verbose: false,
-};
-
-export const meta = {
-  description: "Root command - shows help or runs default action",
-  examples: ["${config.name.replace(/^@[^/]+\//, "")}", "${config.name.replace(/^@[^/]+\//, "")} --verbose"],
-};
-
-export default async function ({ log, flags }: { log: (...args: unknown[]) => void; flags: { verbose: boolean } }) {
-  if (flags.verbose) {
-    log("Running in verbose mode");
-  }
-  log("Hello from ${config.name}!");
-  log("Run \`${config.name.replace(/^@[^/]+\//, "")} --help\` to see available commands");
-}
+export default defineCommand({
+  argTypes: {
+    boolean: ["verbose"],
+  },
+  defaults: {
+    verbose: false,
+  },
+  meta: {
+    description: "Root command - shows help or runs default action",
+    examples: ["${cliName}", "${cliName} --verbose"],
+  },
+  async run({ log, flags }) {
+    if (flags.verbose) {
+      log("Running in verbose mode");
+    }
+    log("Hello from ${config.name}!");
+    log("Run \\`${cliName} --help\\` to see available commands");
+  },
+});
 `;
 }
 
@@ -426,121 +425,118 @@ function generateExampleCommand(config: ProjectConfig): string {
 
   if (config.schemaLibrary === "zod") {
     return `import { z } from "zod";
+import { defineCommand } from "@hacksaw/crate";
 
-export const args = z.tuple([z.string()]);
+export default defineCommand({
+  args: z.tuple([z.string()]),
+  flags: z.object({
+    force: z.boolean().default(false),
+  }),
+  meta: {
+    description: "Example command with positional args and flags",
+    examples: [
+      "${cliName} greet World",
+      "${cliName} greet World --force",
+    ],
+  },
+  async run({ args, flags, log }) {
+    const [name] = args;
 
-export const flags = z.object({
-  force: z.boolean().default(false),
+    log(\`Hello, \${name}!\`);
+
+    if (flags.force) {
+      log("(Force mode enabled)");
+    }
+  },
 });
-
-export const meta = {
-  description: "Example command with positional args and flags",
-  examples: [
-    "${cliName} greet World",
-    "${cliName} greet World --force",
-  ],
-};
-
-export default async function ({ args, flags, log }: { args: [string]; flags: { force: boolean }; log: (...args: unknown[]) => void }) {
-  const [name] = args;
-  
-  log(\`Hello, \${name}!\`);
-  
-  if (flags.force) {
-    log("(Force mode enabled)");
-  }
-}
 `;
   }
 
   if (config.schemaLibrary === "valibot") {
     return `import * as v from "valibot";
+import { defineCommand } from "@hacksaw/crate";
 
-export const args = v.tuple([v.string()]);
+export default defineCommand({
+  args: v.tuple([v.string()]),
+  flags: v.object({
+    force: v.optional(v.boolean(), false),
+  }),
+  meta: {
+    description: "Example command with positional args and flags",
+    examples: [
+      "${cliName} greet World",
+      "${cliName} greet World --force",
+    ],
+  },
+  async run({ args, flags, log }) {
+    const [name] = args;
 
-export const flags = v.object({
-  force: v.optional(v.boolean(), false),
+    log(\`Hello, \${name}!\`);
+
+    if (flags.force) {
+      log("(Force mode enabled)");
+    }
+  },
 });
-
-export const meta = {
-  description: "Example command with positional args and flags",
-  examples: [
-    "${cliName} greet World",
-    "${cliName} greet World --force",
-  ],
-};
-
-export default async function ({ args, flags, log }: { args: [string]; flags: { force: boolean }; log: (...args: unknown[]) => void }) {
-  const [name] = args;
-  
-  log(\`Hello, \${name}!\`);
-  
-  if (flags.force) {
-    log("(Force mode enabled)");
-  }
-}
 `;
   }
 
   if (config.schemaLibrary === "arktype") {
     return `import { type } from "arktype";
+import { defineCommand } from "@hacksaw/crate";
 
-export const args = type("[string]");
+export default defineCommand({
+  args: type("[string]"),
+  flags: type({
+    force: "boolean? = false",
+  }),
+  meta: {
+    description: "Example command with positional args and flags",
+    examples: [
+      "${cliName} greet World",
+      "${cliName} greet World --force",
+    ],
+  },
+  async run({ args, flags, log }) {
+    const [name] = args;
 
-export const flags = type({
-  force: "boolean? = false",
+    log(\`Hello, \${name}!\`);
+
+    if (flags.force) {
+      log("(Force mode enabled)");
+    }
+  },
 });
-
-export const meta = {
-  description: "Example command with positional args and flags",
-  examples: [
-    "${cliName} greet World",
-    "${cliName} greet World --force",
-  ],
-};
-
-export default async function ({ args, flags, log }: { args: [string]; flags: { force: boolean }; log: (...args: unknown[]) => void }) {
-  const [name] = args;
-  
-  log(\`Hello, \${name}!\`);
-  
-  if (flags.force) {
-    log("(Force mode enabled)");
-  }
-}
 `;
   }
 
   // No schema library
-  return `export const args = undefined;
+  return `import { defineCommand } from "@hacksaw/crate";
 
-export const flags = undefined;
+export default defineCommand({
+  argTypes: {
+    boolean: ["force"],
+  },
+  defaults: {
+    force: false,
+  },
+  meta: {
+    description: "Example command with positional args and flags",
+    examples: [
+      "${cliName} greet World",
+      "${cliName} greet World --force",
+    ],
+  },
+  async run({ args, flags, log }) {
+    const [name] = args;
 
-export const argTypes = {
-  boolean: ["force"],
-};
+    log(\`Hello, \${name}!\`);
 
-export const defaults = {
-  force: false,
-};
-
-export const meta = {
-  description: "Example command with positional args and flags",
-  examples: [
-    "${cliName} greet World",
-    "${cliName} greet World --force",
-  ],
-};
-
-export default async function ({ args, flags, log }: { args: [string]; flags: { force: boolean }; log: (...args: unknown[]) => void }) {
-  const [name] = args;
-  
-  log(\`Hello, \${name}!\`);
-  
-  if (flags.force) {
-    log("(Force mode enabled)");
-  }
-}
+    if (flags.force) {
+      log("(Force mode enabled)");
+    }
+  },
+});
 `;
 }
 
@@ -598,22 +594,23 @@ Create a TypeScript file in the \`commands/\` directory:
 \`\`\`typescript
 // commands/hello.ts
 import { z } from "zod";
+import { defineCommand } from "@hacksaw/crate";
 
-export const args = z.tuple([z.string()]);
-export const flags = z.object({
-  loud: z.boolean().default(false),
+export default defineCommand({
+  args: z.tuple([z.string()]),
+  flags: z.object({
+    loud: z.boolean().default(false),
+  }),
+  meta: {
+    description: "Say hello",
+    examples: ["${cliName} hello world", "${cliName} hello world --loud"],
+  },
+  async run({ args, flags, log }) {
+    const [name] = args;
+    const message = flags.loud ? \`HELLO \${name.toUpperCase()}!\` : \`Hello, \${name}!\`;
+    log(message);
+  },
 });
-
-export const meta = {
-  description: "Say hello",
-  examples: ["${cliName} hello world", "${cliName} hello world --loud"],
-};
-
-export default async function ({ args, flags, log }) {
-  const [name] = args;
-  const message = flags.loud ? \`HELLO \${name.toUpperCase()}!\` : \`Hello, \${name}!\`;
-  log(message);
-}
 \`\`\`
 
 Subcommands are supported via nested directories:
