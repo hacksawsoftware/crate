@@ -1,45 +1,8 @@
 import type { StandardSchemaV1 } from "@standard-schema/spec";
-import type { ParseOptions } from "@bomb.sh/args";
 
-/**
- * CLI argument types for @bomb.sh/args configuration
- */
-export interface ArgTypes {
-  /** Flags that are treated as booleans (no value after them) */
-  boolean?: string[];
-  /** Flags that are treated as strings (value after them) */
-  string?: string[];
-  /** Flags that can be repeated (collect into array) */
-  array?: string[];
-}
-
-/**
- * Command argument configuration
- * Combines @bomb.sh/args types with Standard Schema for validation
- */
-export interface ArgConfig {
-  /** Types for @bomb.sh/args parsing */
-  types: ArgTypes;
-  /** Standard Schema for validating the parsed result */
-  schema: StandardSchemaV1;
-  /** Default values for flags */
-  defaults?: Record<string, unknown>;
-  /** Aliases (e.g., { h: "help" }) */
-  aliases?: Record<string, string>;
-}
-
-/**
- * Build @bomb.sh/args ParseOptions from ArgConfig
- */
-export function buildParseOptions(config: ArgConfig): ParseOptions {
-  return {
-    boolean: config.types.boolean,
-    string: config.types.string,
-    array: config.types.array,
-    default: config.defaults,
-    alias: config.aliases,
-  };
-}
+// ============================================================================
+// Validation
+// ============================================================================
 
 /**
  * Validate parsed arguments against a Standard Schema
@@ -60,40 +23,6 @@ export async function validateWithSchema<T>(
   return result.value as T;
 }
 
-/**
- * Parse argv using @bomb.sh/args with the given config
- */
-export async function parseAndValidate<T>(
-  config: ArgConfig,
-  argv: string[]
-): Promise<T> {
-  const { parse } = await import("@bomb.sh/args");
-  const options = buildParseOptions(config);
-  const parsed = parse(argv, options);
-
-  return validateWithSchema(config.schema as StandardSchemaV1<unknown, T>, parsed);
-}
-
-/**
- * Helper to create an ArgConfig with explicit types
- * This is just for convenience - users can use any Standard Schema library
- */
-export function createArgConfig<T>(
-  schema: StandardSchemaV1<unknown, T>,
-  types: ArgTypes = {},
-  defaults?: Record<string, unknown>,
-  aliases?: Record<string, string>
-): ArgConfig & { _type: T } {
-  return {
-    types,
-    schema,
-    defaults,
-    aliases,
-    // Phantom type for type inference
-    _type: undefined as unknown as T,
-  };
-}
-
 // ============================================================================
 // JSON Schema Introspection
 // ============================================================================
@@ -112,23 +41,6 @@ interface JSONSchema {
   enum?: unknown[];
   const?: unknown;
 }
-
-/**
- * User-provided function to generate JSON Schema (for libraries like Valibot)
- * @example
- * ```ts
- * import { toJsonSchema } from '@valibot/to-json-schema';
- * import * as v from 'valibot';
- * 
- * export const flags = v.object({
- *   force: v.boolean(),
- * });
- * 
- * // Attach the JSON Schema generator
- * export const toJSONSchema = () => toJsonSchema(flags);
- * ```
- */
-export type JSONSchemaGenerator = () => object;
 
 /**
  * Extract JSON Schema from a schema object using available methods

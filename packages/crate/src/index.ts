@@ -1,13 +1,13 @@
 import { pathToFileURL } from "node:url";
 import { stdin, stdout, stderr } from "node:process";
 import { parse } from "@bomb.sh/args";
-import type { StandardSchemaV1 } from "@standard-schema/spec";
 import type { 
   ArgTypes,
   CliConfig, 
   CommandDefinition, 
   CommandRoute, 
   Context,
+  JSONSchemaGenerator,
 } from "./types.js";
 import { scanCommands } from "./scanner.js";
 import { matchRoute, findRootCommand, type RouteMatch } from "./router.js";
@@ -16,35 +16,36 @@ import { validateWithSchema, extractSchemaFlags, getSchemaVendor } from "./schem
 // Re-exports
 export { scanCommands } from "./scanner.js";
 export { matchRoute, findRootCommand } from "./router.js";
-export { validateWithSchema, buildParseOptions, extractSchemaFlags, getSchemaVendor, type JSONSchemaGenerator } from "./schema.js";
+export { validateWithSchema, extractSchemaFlags, getSchemaVendor } from "./schema.js";
 export { defineCommand } from "./define.js";
-export type { CliConfig, CommandDefinition, Context, CommandRoute, ArgTypes };
-
-// Type helper to infer types from a Standard Schema
-export type InferInput<T extends StandardSchemaV1> = 
-  T["~standard"]["types"] extends { input: infer I } ? I : unknown;
-export type InferOutput<T extends StandardSchemaV1> = 
-  T["~standard"]["types"] extends { output: infer O } ? O : unknown;
+export type { CliConfig, CommandDefinition, Context, CommandRoute, ArgTypes, JSONSchemaGenerator };
 
 /**
  * Load a command module from file path
+ * Commands must use defineCommand() - direct function exports are not supported
  */
 async function loadCommand(filePath: string): Promise<CommandDefinition> {
   const fileUrl = pathToFileURL(filePath).href;
   const module = await import(fileUrl);
   
-  if (typeof module.default !== "function") {
+  // Validate that the default export is a proper CommandDefinition from defineCommand()
+  if (!module.default || typeof module.default !== "object") {
     throw new Error(
-      `Command at ${filePath} must export a default function handler`
+      `Command at ${filePath} must export a default command definition created with defineCommand()`
     );
   }
   
-  return {
-    default: module.default,
-    args: module.args,
-    flags: module.flags,
-    meta: module.meta,
-  };
+  const command = module.default as Partial<CommandDefinition>;
+  
+  // Ensure the required 'default' handler property exists
+  if (typeof command.default !== "function") {
+    throw new Error(
+      `Command at ${filePath} must have a handler function. Use defineCommand({ run: ... }) to create your command.`
+    );
+  }
+  
+  // Return the command definition as-is (defineCommand() already structures it correctly)
+  return module.default as CommandDefinition;
 }
 
 /**

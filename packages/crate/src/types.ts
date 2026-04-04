@@ -1,18 +1,6 @@
 import type { StandardSchemaV1 } from "@standard-schema/spec";
 
 /**
- * Terminal IO interface for commands
- */
-export interface Stdio {
-  /** Standard input stream */
-  stdin: NodeJS.ReadStream;
-  /** Standard output stream */
-  stdout: NodeJS.WriteStream;
-  /** Standard error stream */
-  stderr: NodeJS.WriteStream;
-}
-
-/**
  * CLI argument types for explicit configuration
  */
 export interface ArgTypes {
@@ -27,7 +15,13 @@ export interface ArgTypes {
 /**
  * Command execution context
  */
-export interface Context extends Stdio {
+export interface Context {
+  /** Standard input stream */
+  stdin: NodeJS.ReadStream;
+  /** Standard output stream */
+  stdout: NodeJS.WriteStream;
+  /** Standard error stream */
+  stderr: NodeJS.WriteStream;
   /** The parsed positional arguments */
   args: unknown[];
   /** The parsed flags/options */
@@ -58,6 +52,12 @@ export interface CommandMeta {
 }
 
 /**
+ * Function type for generating JSON Schema from a schema object.
+ * Used by libraries like Valibot that provide JSON Schema export via a separate function.
+ */
+export type JSONSchemaGenerator = () => object;
+
+/**
  * Command definition - what each command file exports
  */
 export interface CommandDefinition {
@@ -81,6 +81,11 @@ export interface CommandDefinition {
    * Usually auto-detected from schema, but can be overridden here.
    */
   defaults?: Record<string, unknown>;
+  /**
+   * Optional JSON Schema generator function for libraries like Valibot
+   * that don't have native JSON Schema export on the schema object itself.
+   */
+  toJSONSchema?: JSONSchemaGenerator;
 }
 
 /**
@@ -98,22 +103,6 @@ export interface CommandRoute {
 }
 
 /**
- * Matched command with parsed arguments
- */
-export interface MatchedCommand {
-  /** The route that was matched */
-  route: CommandRoute;
-  /** The loaded command module */
-  module: CommandDefinition;
-  /** Parsed positional arguments */
-  args: unknown[];
-  /** Dynamic path parameters */
-  params: Record<string, string>;
-  /** Parsed flags */
-  flags: Record<string, unknown>;
-}
-
-/**
  * CLI configuration options
  */
 export interface CliConfig {
@@ -125,6 +114,4 @@ export interface CliConfig {
   description?: string;
   /** Directory containing command files (default: 'commands') */
   commandsDir?: string;
-  /** Entry point file name (default: 'index.ts') */
-  entryPoint?: string;
 }

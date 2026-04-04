@@ -1,21 +1,7 @@
-import type { ArgTypes, CommandDefinition, Context } from "./types.js";
-
-/**
- * Function type for generating JSON Schema from a schema object.
- * Used by libraries like Valibot that provide JSON Schema export via a separate function.
- */
-export type JSONSchemaGenerator = () => object;
-
-/**
- * Helper type to extract the output type from a Zod schema.
- * Uses Zod's internal `_zod.output` property.
- */
-export type InferZodOutput<T> = T extends { _zod: { output: infer O } } ? O : unknown;
+import type { ArgTypes, CommandDefinition, Context, JSONSchemaGenerator } from "./types.js";
 
 /**
  * Helper type to extract the output type from a Standard Schema.
- * Note: Not all libraries populate `~standard.types`. Use library-specific helpers
- * like `InferZodOutput` for Zod schemas.
  */
 export type InferOutput<T> = T extends { "~standard": { types: { output: infer O } } }
   ? O
@@ -79,12 +65,12 @@ type TypedContext<TArgs, TFlags> = Omit<Context, "args" | "flags"> & {
  * @example Using explicit types (fallback)
  * ```ts
  * import { z } from 'zod';
- * import { defineCommand, type InferZodOutput } from '@hacksaw/crate';
+ * import { defineCommand, type InferOutput } from '@hacksaw/crate';
  *
  * const argsSchema = z.tuple([z.string()]);
  * const flagsSchema = z.object({ force: z.boolean() });
  *
- * export default defineCommand<InferZodOutput<typeof argsSchema>, InferZodOutput<typeof flagsSchema>>({
+ * export default defineCommand<InferOutput<typeof argsSchema>, InferOutput<typeof flagsSchema>>({
  *   args: argsSchema,
  *   flags: flagsSchema,
  *   async run({ args, flags }) {
@@ -103,5 +89,6 @@ export function defineCommand<TArgs = unknown, TFlags = Record<string, unknown>>
     argTypes: def.argTypes,
     defaults: def.defaults,
     meta: def.meta,
+    toJSONSchema: def.toJSONSchema,
   };
 }

@@ -43,7 +43,9 @@ src/
 
 ## Usage Pattern
 
-### Using `defineCommand` (Recommended)
+Commands **must** use `defineCommand`. Direct exports of `args`, `flags`, and `meta` are not supported.
+
+### Using `defineCommand`
 
 The `defineCommand` helper provides full type inference from your schema:
 
@@ -67,34 +69,6 @@ export default defineCommand({
     if (flags.force) log("Force mode!");  // Fully typed as boolean
   },
 });
-```
-
-### Alternative: Direct Exports (Explicit Types)
-
-You can also export schemas and a default function directly (requires explicit type annotations):
-
-```typescript
-// commands/deploy.ts
-import { z } from "zod";
-
-export const args = z.tuple([z.string()]);
-export const flags = z.object({
-  force: z.boolean().default(false),
-});
-export const meta = {
-  description: "Deploy the app",
-  examples: ["my-cli deploy production --force"],
-};
-
-export default async function ({ args, flags, log }: { 
-  args: [string]; 
-  flags: { force: boolean }; 
-  log: (...args: unknown[]) => void;
-}) {
-  const [target] = args;
-  log(`Deploying to ${target}...`);
-  if (flags.force) log("Force mode!");
-}
 ```
 
 <!-- Added: 2026-04-04 -->
