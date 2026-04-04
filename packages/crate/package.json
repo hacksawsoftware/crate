@@ -12,10 +12,10 @@
     }
   },
   "scripts": {
-    "build": "tsc",
-    "dev": "tsc --watch",
-    "test": "node --test dist/**/*.test.js",
-    "example": "jiti ../../examples/my-cli/cli.ts"
+    "clean": "rm -rf dist",
+    "build": "pnpm run clean && rolldown --config rolldown.config.js && tsc --emitDeclarationOnly",
+    "dev": "rolldown --config rolldown.config.js --watch",
+    "typecheck": "tsc --noEmit"
   },
   "keywords": [
     "cli",
@@ -31,6 +31,7 @@
   "devDependencies": {
     "@types/node": "^22.0.0",
     "jiti": "^2.6.1",
+    "rolldown": "1.0.0-rc.13",
     "typescript": "^5.5.0",
     "zod": "4.3.6"
   }
