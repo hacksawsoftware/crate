@@ -19,17 +19,19 @@ export interface ArgTypes {
  */
 export interface Hooks {
   /** Called before route matching - can modify argv */
-  beforeMatch?: (ctx: { argv: string[] }) => Promise<{ argv?: string[] } | void> | { argv?: string[] } | void;
-  
+  beforeMatch?: (ctx: {
+    argv: string[];
+  }) => Promise<{ argv?: string[] } | void> | { argv?: string[] } | void;
+
   /** Called after route match, before loading command */
   beforeLoad?: (ctx: { route: CommandRoute; argv: string[] }) => Promise<void> | void;
-  
+
   /** Called before command execution - can modify context (middleware pattern) */
   beforeRun?: (ctx: Context) => Promise<Context | void> | Context | void;
-  
+
   /** Called after successful command execution */
   afterRun?: (ctx: Context) => Promise<void> | void;
-  
+
   /** Called on any error - return true to swallow error (prevent exit) */
   onError?: (error: unknown, ctx: Partial<Context>) => Promise<boolean | void> | boolean | void;
 }

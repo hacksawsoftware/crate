@@ -5,19 +5,19 @@ import type { ArgTypes, CommandDefinition, Context, JSONSchemaGenerator, Hooks }
  */
 export type InferOutput<T> = T extends { "~standard": { types: { output: infer O } } }
   ? O
-  : T extends { _zod: { output: infer O } }  // Fallback for Zod
+  : T extends { _zod: { output: infer O } } // Fallback for Zod
     ? O
     : unknown;
 
 /**
  * Command definition with type inference from Standard Schema.
  */
-interface TypedCommandDefinition<
-  TArgs = unknown,
-  TFlags = Record<string, unknown>
-> {
+interface TypedCommandDefinition<TArgs = unknown, TFlags = Record<string, unknown>> {
   args?: { "~standard": { types?: { output: TArgs } } } | { _zod: { output: TArgs } } | undefined;
-  flags?: { "~standard": { types?: { output: TFlags } } } | { _zod: { output: TFlags } } | undefined;
+  flags?:
+    | { "~standard": { types?: { output: TFlags } } }
+    | { _zod: { output: TFlags } }
+    | undefined;
   argTypes?: ArgTypes;
   defaults?: Record<string, unknown>;
   toJSONSchema?: JSONSchemaGenerator;
@@ -81,7 +81,7 @@ type TypedContext<TArgs, TFlags> = Omit<Context, "args" | "flags"> & {
  * ```
  */
 export function defineCommand<TArgs = unknown, TFlags = Record<string, unknown>>(
-  def: TypedCommandDefinition<TArgs, TFlags>
+  def: TypedCommandDefinition<TArgs, TFlags>,
 ): CommandDefinition {
   return {
     default: def.run as CommandDefinition["default"],

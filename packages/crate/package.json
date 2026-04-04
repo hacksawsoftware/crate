@@ -2,6 +2,13 @@
   "name": "@hacksaw/crate",
   "version": "0.1.0",
   "description": "File-based routing CLI metaframework built on @bomb.sh/args",
+  "keywords": [
+    "cli",
+    "framework",
+    "routing",
+    "typescript"
+  ],
+  "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -15,15 +22,12 @@
     "clean": "rm -rf dist",
     "build": "pnpm run clean && rolldown --config rolldown.config.js && tsc --emitDeclarationOnly",
     "dev": "rolldown --config rolldown.config.js --watch",
+    "fmt": "oxfmt",
+    "fmt:check": "oxfmt --check",
+    "lint": "oxlint",
+    "lint:fix": "oxlint --fix",
     "typecheck": "tsc --noEmit"
   },
-  "keywords": [
-    "cli",
-    "framework",
-    "routing",
-    "typescript"
-  ],
-  "license": "MIT",
   "dependencies": {
     "@bomb.sh/args": "^0.3.1",
     "@standard-schema/spec": "^1.1.0"
@@ -31,6 +35,8 @@
   "devDependencies": {
     "@types/node": "^22.0.0",
     "jiti": "^2.6.1",
+    "oxfmt": "^0.43.0",
+    "oxlint": "^1.58.0",
     "rolldown": "1.0.0-rc.13",
     "typescript": "^5.5.0",
     "zod": "4.3.6"

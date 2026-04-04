@@ -35,15 +35,15 @@ function filenameToSegment(filename: string): string {
 async function scanDir(
   dir: string,
   baseDir: string,
-  currentSegments: string[] = []
+  currentSegments: string[] = [],
 ): Promise<CommandRoute[]> {
   const routes: CommandRoute[] = [];
-  
+
   const entries = await readdir(dir, { withFileTypes: true });
-  
+
   for (const entry of entries) {
     const fullPath = join(dir, entry.name);
-    
+
     if (entry.isDirectory()) {
       // Recurse into subdirectory
       const segment = filenameToSegment(entry.name);
@@ -53,11 +53,11 @@ async function scanDir(
       // Process command file
       const segment = filenameToSegment(entry.name);
       const segments = [...currentSegments, segment];
-      
+
       // Determine which segments are dynamic parameters
       const params: string[] = [];
       const pathSegments = relative(baseDir, dir).split("/").filter(Boolean);
-      
+
       // Check each directory in the path for dynamic params
       for (const pathSeg of pathSegments) {
         const paramName = extractParamName(pathSeg);
@@ -65,13 +65,13 @@ async function scanDir(
           params.push(paramName);
         }
       }
-      
+
       // Check if the file itself is a dynamic param
       const fileParam = extractParamName(entry.name);
       if (fileParam) {
         params.push(fileParam);
       }
-      
+
       routes.push({
         filePath: fullPath,
         segments,
@@ -80,7 +80,7 @@ async function scanDir(
       });
     }
   }
-  
+
   return routes;
 }
 
@@ -93,7 +93,7 @@ export async function scanCommands(commandsDir: string): Promise<CommandRoute[]>
     if (!stats.isDirectory()) {
       throw new Error(`Commands path is not a directory: ${commandsDir}`);
     }
-    
+
     const routes = await scanDir(commandsDir, commandsDir);
     return sortRoutes(routes);
   } catch (error) {
@@ -115,14 +115,14 @@ export function sortRoutes(routes: CommandRoute[]): CommandRoute[] {
     // Static routes come before dynamic routes
     if (!a.isDynamic && b.isDynamic) return -1;
     if (a.isDynamic && !b.isDynamic) return 1;
-    
+
     // Among dynamic routes, fewer params = more specific
     if (a.isDynamic && b.isDynamic) {
       if (a.params.length !== b.params.length) {
         return a.params.length - b.params.length;
       }
     }
-    
+
     // Among same type, more segments first (deeper paths)
     return b.segments.length - a.segments.length;
   });

@@ -8,7 +8,7 @@ import type { Hooks, Context, CommandRoute } from "./types.js";
 export async function runBeforeMatch(
   cliHooks: Hooks | undefined,
   commandHooks: Hooks | undefined,
-  argv: string[]
+  argv: string[],
 ): Promise<string[]> {
   let currentArgv = argv;
 
@@ -39,7 +39,7 @@ export async function runBeforeLoad(
   cliHooks: Hooks | undefined,
   commandHooks: Hooks | undefined,
   route: CommandRoute,
-  argv: string[]
+  argv: string[],
 ): Promise<void> {
   // CLI-level hook runs first (outer)
   if (cliHooks?.beforeLoad) {
@@ -60,7 +60,7 @@ export async function runBeforeLoad(
 export async function runBeforeRun(
   cliHooks: Hooks | undefined,
   commandHooks: Hooks | undefined,
-  ctx: Context
+  ctx: Context,
 ): Promise<Context> {
   let currentCtx = ctx;
 
@@ -90,7 +90,7 @@ export async function runBeforeRun(
 export async function runAfterRun(
   cliHooks: Hooks | undefined,
   commandHooks: Hooks | undefined,
-  ctx: Context
+  ctx: Context,
 ): Promise<void> {
   // Command-level hook runs first (bubble up from inside)
   if (commandHooks?.afterRun) {
@@ -113,7 +113,7 @@ export async function runOnError(
   cliHooks: Hooks | undefined,
   commandHooks: Hooks | undefined,
   error: unknown,
-  ctx: Partial<Context>
+  ctx: Partial<Context>,
 ): Promise<boolean> {
   // Command-level hook runs first (bubble up from inside)
   if (commandHooks?.onError) {
