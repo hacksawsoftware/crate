@@ -1,5 +1,7 @@
 import type { StandardSchemaV1 } from "@standard-schema/spec";
 
+export type { StandardSchemaV1 };
+
 /**
  * CLI argument types for explicit configuration
  */
@@ -10,6 +12,26 @@ export interface ArgTypes {
   string?: string[];
   /** Flags that can be repeated (collect into array) */
   array?: string[];
+}
+
+/**
+ * Lifecycle hooks for command execution
+ */
+export interface Hooks {
+  /** Called before route matching - can modify argv */
+  beforeMatch?: (ctx: { argv: string[] }) => Promise<{ argv?: string[] } | void> | { argv?: string[] } | void;
+  
+  /** Called after route match, before loading command */
+  beforeLoad?: (ctx: { route: CommandRoute; argv: string[] }) => Promise<void> | void;
+  
+  /** Called before command execution - can modify context (middleware pattern) */
+  beforeRun?: (ctx: Context) => Promise<Context | void> | Context | void;
+  
+  /** Called after successful command execution */
+  afterRun?: (ctx: Context) => Promise<void> | void;
+  
+  /** Called on any error - return true to swallow error (prevent exit) */
+  onError?: (error: unknown, ctx: Partial<Context>) => Promise<boolean | void> | boolean | void;
 }
 
 /**
@@ -86,6 +108,11 @@ export interface CommandDefinition {
    * that don't have native JSON Schema export on the schema object itself.
    */
   toJSONSchema?: JSONSchemaGenerator;
+  /**
+   * Lifecycle hooks for this specific command.
+   * These run inside CLI-level hooks (bubble up pattern).
+   */
+  hooks?: Hooks;
 }
 
 /**
@@ -114,4 +141,9 @@ export interface CliConfig {
   description?: string;
   /** Directory containing command files (default: 'commands') */
   commandsDir?: string;
+  /**
+   * Global lifecycle hooks for all commands.
+   * These run outside command-level hooks (bubble up pattern).
+   */
+  hooks?: Hooks;
 }

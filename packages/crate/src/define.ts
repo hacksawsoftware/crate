@@ -1,4 +1,4 @@
-import type { ArgTypes, CommandDefinition, Context, JSONSchemaGenerator } from "./types.js";
+import type { ArgTypes, CommandDefinition, Context, JSONSchemaGenerator, Hooks } from "./types.js";
 
 /**
  * Helper type to extract the output type from a Standard Schema.
@@ -22,6 +22,7 @@ interface TypedCommandDefinition<
   defaults?: Record<string, unknown>;
   toJSONSchema?: JSONSchemaGenerator;
   meta?: { description?: string; examples?: string[]; hidden?: boolean };
+  hooks?: Hooks;
   run: (ctx: TypedContext<TArgs, TFlags>) => Promise<void> | void;
 }
 
@@ -90,5 +91,6 @@ export function defineCommand<TArgs = unknown, TFlags = Record<string, unknown>>
     defaults: def.defaults,
     meta: def.meta,
     toJSONSchema: def.toJSONSchema,
+    hooks: def.hooks,
   };
 }

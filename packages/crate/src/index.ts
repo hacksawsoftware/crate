@@ -8,17 +8,26 @@ import type {
   CommandRoute, 
   Context,
   JSONSchemaGenerator,
+  Hooks,
 } from "./types.js";
 import { scanCommands } from "./scanner.js";
 import { matchRoute, findRootCommand, type RouteMatch } from "./router.js";
 import { validateWithSchema, extractSchemaFlags, getSchemaVendor, ValidationError } from "./schema.js";
+import { 
+  runBeforeMatch, 
+  runBeforeLoad, 
+  runBeforeRun, 
+  runAfterRun, 
+  runOnError 
+} from "./hooks.js";
 
 // Re-exports
 export { scanCommands } from "./scanner.js";
 export { matchRoute, findRootCommand } from "./router.js";
 export { validateWithSchema, extractSchemaFlags, getSchemaVendor, ValidationError } from "./schema.js";
 export { defineCommand } from "./define.js";
-export type { CliConfig, CommandDefinition, Context, CommandRoute, ArgTypes, JSONSchemaGenerator };
+export { runBeforeMatch, runBeforeLoad, runBeforeRun, runAfterRun, runOnError } from "./hooks.js";
+export type { CliConfig, CommandDefinition, Context, CommandRoute, ArgTypes, JSONSchemaGenerator, Hooks };
 
 /**
  * Load a command module from file path
@@ -151,8 +160,16 @@ async function executeCommand(
   // Add path params to flags for easy access
   const mergedFlags = { ...flags, ...match.params };
   
-  const ctx = createContext(args as string[], mergedFlags, rawArgv);
+  let ctx = createContext(args as string[], mergedFlags, rawArgv);
+  
+  // Run beforeRun hooks - CLI first (outer), then command (inner)
+  ctx = await runBeforeRun(config.hooks, command.hooks, ctx);
+  
+  // Execute command
   await command.default(ctx);
+  
+  // Run afterRun hooks - command first (bubble up), then CLI
+  await runAfterRun(config.hooks, command.hooks, ctx);
 }
 
 /**
@@ -215,6 +232,11 @@ function printCommandHelp(
  * Run the CLI
  */
 export async function run(config: CliConfig): Promise<void> {
+  let argv = process.argv.slice(2);
+  let match: RouteMatch | null = null;
+  let command: CommandDefinition | null = null;
+  let partialCtx: Partial<Context> = {};
+  
   try {
     const commandsDir = config.commandsDir ?? "commands";
     
@@ -226,11 +248,11 @@ export async function run(config: CliConfig): Promise<void> {
       process.exit(1);
     }
     
-    // Get argv (skip node and script path)
-    const argv = process.argv.slice(2);
+    // Run beforeMatch hooks - can modify argv
+    argv = await runBeforeMatch(config.hooks, undefined, argv);
     
     // Try to match a route
-    const match = matchRoute(routes, argv);
+    match = matchRoute(routes, argv);
     
     if (!match) {
       // Check for help flags
@@ -242,31 +264,56 @@ export async function run(config: CliConfig): Promise<void> {
       // Try root command
       const rootRoute = findRootCommand(routes);
       if (rootRoute) {
-        const command = await loadCommand(rootRoute.filePath);
-        await executeCommand(command, { 
+        match = { 
           route: rootRoute,
           params: {},
           remainingArgs: argv,
-        }, argv, config);
-        return;
+        };
+      } else {
+        console.error(`Unknown command: ${argv.join(" ")}`);
+        printHelp(config, routes);
+        process.exit(1);
       }
-      
-      console.error(`Unknown command: ${argv.join(" ")}`);
-      printHelp(config, routes);
-      process.exit(1);
     }
     
     // Check for help
     if (match.remainingArgs.includes("--help") || match.remainingArgs.includes("-h")) {
-      const command = await loadCommand(match.route.filePath);
+      command = await loadCommand(match.route.filePath);
       printCommandHelp(config, match.route, command);
       return;
     }
     
-    // Load and execute the matched command
-    const command = await loadCommand(match.route.filePath);
+    // Load the matched command
+    command = await loadCommand(match.route.filePath);
+    
+    // Run beforeLoad hooks (CLI outer, command inner)
+    await runBeforeLoad(config.hooks, command.hooks, match.route, argv);
+    
+    // Execute the command
     await executeCommand(command, match, argv, config);
+    
   } catch (error) {
+    // Build partial context for error hook if possible
+    if (!partialCtx.log) {
+      partialCtx = {
+        stdin,
+        stdout,
+        stderr,
+        args: [],
+        flags: {},
+        rawArgv: process.argv.slice(2),
+        log: (...msgs: unknown[]) => console.log(...msgs),
+        error: (...msgs: unknown[]) => console.error(...msgs),
+      };
+    }
+    
+    // Run onError hooks - if any returns true, swallow the error
+    const swallowed = await runOnError(config.hooks, command?.hooks, error, partialCtx);
+    
+    if (swallowed) {
+      return; // Error was handled, don't exit
+    }
+    
     // Handle validation errors with user-friendly output (no stack trace)
     if (error instanceof ValidationError) {
       console.error(error.message);
