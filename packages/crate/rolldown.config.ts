@@ -1,4 +1,5 @@
 import { defineConfig } from "rolldown";
+import { bundleSizeReporterPlugin } from "./rolldown-size-plugin.ts";
 
 export default defineConfig({
   input: "src/index.ts",
@@ -10,4 +11,5 @@ export default defineConfig({
   },
   platform: "node",
   external: [/^node:/, /@bomb\.sh\/args/, /@standard-schema\/spec/],
+  plugins: [bundleSizeReporterPlugin()],
 });
