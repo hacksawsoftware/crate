@@ -1,14 +1,34 @@
 <!-- Added: 2026-04-04 -->
 ## Project Overview
-This is **crate**, a TypeScript CLI metaframework with file-based routing built on @bomb.sh/args and Standard Schema.
+This is **crate**, a TypeScript CLI framework with file-based routing built on @bomb.sh/args and Standard Schema.
 
 ## Architecture Decisions
 
 ### File-Based Routing
-- Commands are defined as files in a `commands/` directory
-- Folder structure maps to command hierarchy: `commands/db/migrate.ts` → `my-cli db migrate`
-- Dynamic routes use bracket notation: `commands/info/[id].ts` → `my-cli info <id>`
-- Route parameters are available in `ctx.flags` (e.g., `ctx.flags.id`)
+Commands are defined by folders containing a `+command.ts` file. This enables co-locating route-specific utilities with their commands.
+
+- **Folder structure defines routes**: `commands/db/migrate/+command.ts` → `my-cli db migrate`
+- **Dynamic routes use bracket notation on folders**: `commands/info/[id]/+command.ts` → `my-cli info <id>`
+- **Root command**: `commands/+command.ts` or `commands/index/+command.ts`
+- **Route parameters** are available in `ctx.flags` (e.g., `ctx.flags.id`)
+
+### Benefits of Folder-Based Routing
+```
+commands/
+├── deploy/
+│   ├── +command.ts       # Command handler
+│   ├── utils.ts          # Deploy-specific utilities
+│   ├── config.ts         # Deploy-specific config
+│   └── types.ts          # Deploy-specific types
+├── db/
+│   ├── migrate/
+│   │   ├── +command.ts   # Command handler
+│   │   ├── migrations.ts # Migration utilities
+│   │   └── schema.ts     # Database schema helpers
+│   └── seed/
+│       └── +command.ts
+└── +command.ts           # Root command
+```
 
 ### Schema Integration
 - Uses Standard Schema (@standard-schema/spec) for validation
@@ -50,7 +70,7 @@ Commands **must** use `defineCommand`. Direct exports of `args`, `flags`, and `m
 The `defineCommand` helper provides full type inference from your schema:
 
 ```typescript
-// commands/deploy.ts
+// commands/deploy/+command.ts
 import { z } from "zod";
 import { defineCommand } from "@hacksaw/crate";
 
@@ -67,6 +87,25 @@ export default defineCommand({
     const [target] = args;  // Fully typed as [string]
     log(`Deploying to ${target}...`);
     if (flags.force) log("Force mode!");  // Fully typed as boolean
+  },
+});
+```
+
+### Dynamic Route Parameters
+
+```typescript
+// commands/info/[id]/+command.ts
+import { z } from "zod";
+import { defineCommand } from "@hacksaw/crate";
+
+export default defineCommand({
+  flags: z.object({
+    json: z.boolean().default(false),
+    id: z.string(), // Dynamic param from route
+  }),
+  async run({ flags, log }) {
+    // Access via flags.id
+    log(`Fetching info for ${flags.id}...`);
   },
 });
 ```

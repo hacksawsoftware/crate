@@ -20,7 +20,7 @@
   },
   "scripts": {
     "clean": "rm -rf dist",
-    "build": "pnpm run clean && rolldown --config rolldown.config.js && tsc --emitDeclarationOnly",
+    "build": "pnpm run clean && rolldown --config rolldown.config.ts && tsc --emitDeclarationOnly",
     "dev": "rolldown --config rolldown.config.js --watch",
     "fmt": "oxfmt",
     "fmt:check": "oxfmt --check",

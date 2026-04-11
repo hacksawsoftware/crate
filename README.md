@@ -1,25 +1,18 @@
-# crate
+# 📦 crate
 
-A TypeScript CLI metaframework with file-based routing, built on top of `@bomb.sh/args` and Standard Schema.
+Another TypeScript CLI framework
 
 ## Features
 
-- 📁 **File-based routing** - Commands are organized as files and folders
-- 🔒 **Type-safe** - Full TypeScript support with Standard Schema validation
-- 🏎️ **Fast** - Powered by the ultra-fast `@bomb.sh/args` parser
-- 🎯 **Framework-agnostic schemas** - Use Zod, Valibot, ArkType, or any Standard Schema library
-- 💻 **Built-in stdio** - Access stdin, stdout, stderr directly from command context
-- 🛣️ **Dynamic routes** - Support for `[param]` style dynamic segments
-- ✨ **`defineCommand` API** - Simple, type-safe command definition with full inference
+- **File-based routing** - Folders define routes via `+command.ts` files
+- **Dynamic routes** - `[param]` style parameters with type-safe access
+- **Schema validation** - Supports [Standard JSON Schema](https://standardschema.dev/json-schema) out of the box
+- **Lifecycle hooks** - `beforeRun`, `afterRun`, `onError` at CLI and command levels
 
 ## Installation
 
 ```bash
-npm install crate
-# or
-pnpm add crate
-# or
-yarn add crate
+npm install @hacksaw/crate
 ```
 
 ## Quick Start
@@ -39,10 +32,10 @@ run({
 
 ### 2. Create command files
 
-Commands **must** use `defineCommand` for full type inference:
+Commands **must** use `defineCommand` for full type inference. Commands are defined by folders containing a `+command.ts` file:
 
 ```typescript
-// commands/deploy.ts
+// commands/deploy/+command.ts
 import { z } from "zod";
 import { defineCommand } from "@hacksaw/crate";
 
@@ -81,31 +74,41 @@ npx jiti cli.ts deploy production --force --region us-east-1
 
 ## File-Based Routing
 
-The filesystem structure maps directly to command structure:
+The filesystem structure maps directly to command structure. **Folders define routes**, and each folder contains a `+command.ts` file:
 
 ```
 commands/
-├── index.ts          # Root command (my-cli)
-├── deploy.ts         # Subcommand (my-cli deploy)
+├── +command.ts              # Root command (my-cli)
 ├── deploy/
-│   └── [target].ts   # Dynamic route (my-cli deploy production)
+│   ├── +command.ts          # Subcommand (my-cli deploy)
+│   ├── utils.ts             # Co-located utilities
+│   └── config.ts            # Co-located config
+├── deploy/
+│   └── [target]/            # Dynamic route (my-cli deploy production)
+│       ├── +command.ts
+│       └── deployment-config.ts
 └── db/
-    ├── migrate.ts    # Nested command (my-cli db migrate)
-    └── seed.ts       # (my-cli db seed)
+    ├── migrate/
+│   │   ├── +command.ts      # (my-cli db migrate)
+│   │   └── migrations.ts    # Co-located migration utilities
+│   └── seed/
+│       ├── +command.ts      # (my-cli db seed)
+│       └── seed-data.ts
 ```
 
 ### Dynamic Routes
 
-Use bracket notation for dynamic parameters:
+Use bracket notation on folders for dynamic parameters:
 
 ```typescript
-// commands/info/[id].ts
+// commands/info/[id]/+command.ts
 import { z } from "zod";
 import { defineCommand } from "@hacksaw/crate";
 
 export default defineCommand({
   flags: z.object({
     json: z.boolean().default(false),
+    id: z.string(),  // Include in schema for type safety
   }),
   meta: {
     description: "Get info by ID",
@@ -113,7 +116,7 @@ export default defineCommand({
   },
   async run({ flags, log }) {
     // Dynamic param is available via flags.id
-    const id = flags.id as string;
+    const id = flags.id;  // Fully typed as string
     log(`Getting info for ${id}`);
     if (flags.json) {
       log(JSON.stringify({ id }));
@@ -419,9 +422,10 @@ import {
 ## Example
 
 See the `examples/my-cli` directory for a complete working example with:
-- Root command with optional flags
-- Static subcommands (`deploy`, `db/migrate`)
-- Dynamic routes (`info/[id]`)
+- Root command with optional flags (`commands/+command.ts`)
+- Static subcommands (`commands/deploy/+command.ts`, `commands/db/migrate/+command.ts`)
+- Dynamic subcommands (`commands/info/[id]/+command.ts`)
+- Co-located utilities alongside commands
 - Array flags (`--tags`)
 - Boolean flags (`--force`, `--json`)
 - String flags (`--region`)
