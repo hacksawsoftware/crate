@@ -1,0 +1,22 @@
+{
+  "name": "ls-example",
+  "version": "1.0.0",
+  "description": "Basic ls implementation using valibot for schema validation",
+  "type": "module",
+  "bin": {
+    "ls-example": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "start": "node ./dist/cli.js"
+  },
+  "dependencies": {
+    "@hacksaw/crate": "workspace:*",
+    "valibot": "1.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.5.0"
+  }
+}

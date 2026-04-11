@@ -1,0 +1,22 @@
+{
+  "name": "cat-example",
+  "version": "1.0.0",
+  "description": "Basic cat implementation using zod for schema validation",
+  "type": "module",
+  "bin": {
+    "cat-example": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "start": "node ./dist/cli.js"
+  },
+  "dependencies": {
+    "@hacksaw/crate": "workspace:*",
+    "zod": "4.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.5.0"
+  }
+}
