@@ -1,6 +1,6 @@
 {
   "name": "@hacksaw/crate",
-  "version": "0.1.0",
+  "version": "0.0.1",
   "description": "File-based routing CLI metaframework built on @bomb.sh/args",
   "keywords": [
     "cli",
