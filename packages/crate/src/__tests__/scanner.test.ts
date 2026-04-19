@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { sortRoutes } from '../scanner';
-import type { CommandRoute } from '../types';
+import { sortRoutes } from '../scanner.js';
+import type { CommandRoute } from '../types.js';
 
 describe('Scanner', () => {
   describe('sortRoutes', () => {
@@ -90,8 +90,8 @@ describe('Scanner', () => {
 
       // Both have same specificity, order doesn't matter but should be stable
       expect(sorted.length).toBe(2);
-      expect(sorted.some((r) => r.segments[0] === 'deploy')).toBe(true);
-      expect(sorted.some((r) => r.segments[0] === 'build')).toBe(true);
+      expect(sorted.some((r: any) => r.segments[0] === 'deploy')).toBe(true);
+      expect(sorted.some((r: any) => r.segments[0] === 'build')).toBe(true);
     });
 
     it('should handle mixed static and dynamic routes correctly', () => {

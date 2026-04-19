@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { matchRoute, findRootCommand } from '../router';
-import type { CommandRoute } from '../types';
+import { matchRoute, findRootCommand } from '../router.js';
+import type { CommandRoute } from '../types.js';
 
 describe('Router', () => {
   describe('matchRoute', () => {
