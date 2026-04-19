@@ -21,6 +21,8 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'pnpm'
+      - name: Clean pnpm store (fix oxlint native binding issue)
+        run: pnpm store prune
       - run: pnpm install
       - run: pnpm --filter crate lint
       - run: pnpm --filter crate run typecheck
