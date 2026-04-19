@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import { z } from 'zod';
-import { defineCommand } from '../define';
-import { matchRoute, findRootCommand } from '../router';
-import { validateWithSchema, extractSchemaFlags } from '../schema';
-import type { CommandRoute } from '../types';
+import { defineCommand } from '../define.js';
+import { matchRoute, findRootCommand } from '../router.js';
+import { validateWithSchema, extractSchemaFlags } from '../schema.js';
+import type { CommandRoute } from '../types.js';
 
 describe('Integration Tests', () => {
   describe('End-to-End Flow', () => {
@@ -18,7 +18,7 @@ describe('Integration Tests', () => {
           description: 'Deploy the app',
           examples: ['cli deploy production --force'],
         },
-        async run({ args, flags, log }) {
+        async run({ args, flags, log }: any) {
           log(`Deploying to ${args[0]}...`);
           if (flags.force) log('Force mode!');
         },
@@ -224,14 +224,14 @@ describe('Integration Tests', () => {
         flags: z.object({}),
         meta: { description: 'Test command' },
         hooks: {
-          beforeRun: async (ctx) => {
+          beforeRun: async (ctx: any) => {
             return ctx;
           },
-          afterRun: async (ctx) => {
+          afterRun: async (_ctx: any) => {
             // After run
           },
         },
-        async run({ log }) {
+        async run({ log }: any) {
           log('test');
         },
       });
@@ -246,7 +246,7 @@ describe('Integration Tests', () => {
     it('should infer args type correctly', () => {
       const cmd = defineCommand({
         args: z.tuple([z.string(), z.number()]),
-        async run({ args }) {
+        async run({ args }: any) {
           // args should be [string, number]
           const str: string = args[0];
           const num: number = args[1];
@@ -266,7 +266,7 @@ describe('Integration Tests', () => {
           name: z.string(),
           tags: z.array(z.string()),
         }),
-        async run({ flags }) {
+        async run({ flags }: any) {
           // flags should have the correct types
           const force: boolean = flags.force;
           const name: string = flags.name;

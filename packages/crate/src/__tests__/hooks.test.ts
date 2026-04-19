@@ -1,12 +1,12 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import {
   runBeforeMatch,
   runBeforeLoad,
   runBeforeRun,
   runAfterRun,
   runOnError,
-} from '../hooks';
-import type { Hooks, Context, CommandRoute } from '../types';
+} from '../hooks.js';
+import type { Hooks, Context, CommandRoute } from '../types.js';
 
 describe('Hooks', () => {
   describe('runBeforeMatch', () => {
@@ -14,14 +14,14 @@ describe('Hooks', () => {
       const callOrder: string[] = [];
 
       const cliHooks: Hooks = {
-        beforeMatch: ({ argv }) => {
+        beforeMatch: ({ argv }: any) => {
           callOrder.push('cli');
           return { argv };
         },
       };
 
       const commandHooks: Hooks = {
-        beforeMatch: ({ argv }) => {
+        beforeMatch: ({ argv }: any) => {
           callOrder.push('command');
           return { argv };
         },
@@ -34,7 +34,7 @@ describe('Hooks', () => {
 
     it('should allow modifying argv', async () => {
       const cliHooks: Hooks = {
-        beforeMatch: ({ argv }) => {
+        beforeMatch: ({ argv }: any) => {
           return { argv: [...argv, 'added'] };
         },
       };
@@ -46,13 +46,13 @@ describe('Hooks', () => {
 
     it('should pass modified argv to next hook', async () => {
       const cliHooks: Hooks = {
-        beforeMatch: ({ argv }) => {
+        beforeMatch: ({ argv }: any) => {
           return { argv: [...argv, 'first'] };
         },
       };
 
       const commandHooks: Hooks = {
-        beforeMatch: ({ argv }) => {
+        beforeMatch: ({ argv }: any) => {
           return { argv: [...argv, 'second'] };
         },
       };
@@ -113,7 +113,7 @@ describe('Hooks', () => {
       const receivedArgs: any[] = [];
 
       const cliHooks: Hooks = {
-        beforeLoad: (ctx) => {
+        beforeLoad: (ctx: any) => {
           receivedArgs.push(ctx);
         },
       };
@@ -138,14 +138,14 @@ describe('Hooks', () => {
       const callOrder: string[] = [];
 
       const cliHooks: Hooks = {
-        beforeRun: (ctx) => {
+        beforeRun: (ctx: any) => {
           callOrder.push('cli');
           return ctx;
         },
       };
 
       const commandHooks: Hooks = {
-        beforeRun: (ctx) => {
+        beforeRun: (ctx: any) => {
           callOrder.push('command');
           return ctx;
         },
@@ -169,7 +169,7 @@ describe('Hooks', () => {
 
     it('should allow modifying context', async () => {
       const cliHooks: Hooks = {
-        beforeRun: (ctx) => {
+        beforeRun: (ctx: any) => {
           return {
             ...ctx,
             flags: { ...ctx.flags, modified: true },
@@ -195,7 +195,7 @@ describe('Hooks', () => {
 
     it('should pass modified context to next hook', async () => {
       const cliHooks: Hooks = {
-        beforeRun: (ctx) => {
+        beforeRun: (ctx: any) => {
           return {
             ...ctx,
             flags: { ...ctx.flags, from: 'cli' },
@@ -204,7 +204,7 @@ describe('Hooks', () => {
       };
 
       const commandHooks: Hooks = {
-        beforeRun: (ctx) => {
+        beforeRun: (ctx: any) => {
           return {
             ...ctx,
             flags: { ...ctx.flags, from: 'command' },
@@ -346,7 +346,7 @@ describe('Hooks', () => {
       const receivedErrors: any[] = [];
 
       const cliHooks: Hooks = {
-        onError: (error, ctx) => {
+        onError: (error: any, ctx: any) => {
           receivedErrors.push({ error, ctx });
           return false;
         },

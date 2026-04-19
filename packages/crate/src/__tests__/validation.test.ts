@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { z } from 'zod';
-import { ValidationError, validateWithSchema, extractSchemaFlags, getSchemaVendor } from '../schema';
+import { ValidationError, validateWithSchema, extractSchemaFlags, getSchemaVendor } from '../schema.js';
 
 describe('Validation', () => {
   describe('ValidationError', () => {
@@ -53,7 +53,7 @@ describe('Validation', () => {
       try {
         await validateWithSchema(schema, { name: 123 }, 'flags');
         expect.fail('Should have thrown ValidationError');
-      } catch (e) {
+      } catch (e: unknown) {
         expect(e).toBeInstanceOf(ValidationError);
       }
     });
@@ -66,7 +66,7 @@ describe('Validation', () => {
       try {
         await validateWithSchema(schema, {}, 'flags');
         expect.fail('Should have thrown ValidationError');
-      } catch (e) {
+      } catch (e: unknown) {
         expect(e).toBeInstanceOf(ValidationError);
         if (e instanceof ValidationError) {
           expect(e.context).toBe('flags');
