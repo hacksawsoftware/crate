@@ -98,12 +98,16 @@ async function parseCommand(
   commandName: string,
 ): Promise<{ args: unknown[]; flags: Record<string, unknown> }> {
   // Extract flag types from schema (auto-detect via JSON Schema or use explicit config)
-  const extraction = extractSchemaFlags(command.flags, {
-    boolean: command.argTypes?.boolean,
-    string: command.argTypes?.string,
-    array: command.argTypes?.array,
-    defaults: command.defaults,
-  });
+  const extraction = extractSchemaFlags(
+    command.flags,
+    {
+      boolean: command.argTypes?.boolean,
+      string: command.argTypes?.string,
+      array: command.argTypes?.array,
+      defaults: command.defaults,
+    },
+    command.toJSONSchema,
+  );
 
   if (!extraction.success) {
     const vendor = command.flags ? getSchemaVendor(command.flags) : null;

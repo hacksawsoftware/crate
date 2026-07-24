@@ -373,9 +373,30 @@ export function extractSchemaFlags(
     array?: string[];
     defaults?: Record<string, unknown>;
   },
+  toJSONSchema?: () => object,
 ): ExtractFlagsResult {
-  // Try JSON Schema extraction first
-  const jsonSchema = extractJSONSchema(schema);
+  if (!schema) {
+    return {
+      success: true,
+      config: { boolean: [], string: [], array: [], defaults: {} },
+    };
+  }
+
+  let jsonSchema: JSONSchema | null = null;
+  if (toJSONSchema) {
+    try {
+      const result = toJSONSchema();
+      if (result && typeof result === "object") {
+        jsonSchema = result as JSONSchema;
+      }
+    } catch {
+      // continue to other options
+    }
+  }
+
+  if (!jsonSchema) {
+    jsonSchema = extractJSONSchema(schema);
+  }
 
   if (jsonSchema) {
     const config = extractFlagsFromJSONSchema(jsonSchema);
@@ -385,15 +406,7 @@ export function extractSchemaFlags(
     };
   }
 
-  // Fall back to explicit configuration (only if it has actual values)
-  const hasExplicitConfig =
-    explicitConfig &&
-    ((explicitConfig.boolean && explicitConfig.boolean.length > 0) ||
-      (explicitConfig.string && explicitConfig.string.length > 0) ||
-      (explicitConfig.array && explicitConfig.array.length > 0) ||
-      (explicitConfig.defaults && Object.keys(explicitConfig.defaults).length > 0));
-
-  if (hasExplicitConfig) {
+  if (explicitConfig) {
     return {
       success: true,
       config: {
@@ -405,7 +418,6 @@ export function extractSchemaFlags(
     };
   }
 
-  // No extraction method available
   return {
     success: false,
     config: { boolean: [], string: [], array: [], defaults: {} },

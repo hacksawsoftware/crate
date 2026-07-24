@@ -218,6 +218,8 @@ npm install @valibot/to-json-schema
 ```
 
 #### Option 1: Attach JSON Schema Generator (Auto-Detection)
+When you provide `toJSONSchema`, crate automatically detects which flags are booleans, strings, and arrays from the generated JSON Schema — no explicit `argTypes` needed:
+
 ```typescript
 import { defineCommand } from "@hacksaw/crate";
 import * as v from "valibot";
@@ -232,7 +234,7 @@ const flagsSchema = v.object({
 
 export default defineCommand({
   flags: flagsSchema,
-  // Attach the JSON Schema generator for auto-detection
+  // Provide a generator so crate can introspect flag types automatically
   toJSONSchema: () => toJsonSchema(flagsSchema),
   meta: { description: "Example command" },
   async run({ flags, log }) {
