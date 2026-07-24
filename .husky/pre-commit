@@ -1,0 +1,3 @@
+pnpm exec lint-staged
+pnpm --filter @hacksaw/crate exec tsc --noEmit
+pnpm --filter create-crate exec tsc --noEmit

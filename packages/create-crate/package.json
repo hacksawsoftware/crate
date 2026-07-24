@@ -2,7 +2,15 @@
   "name": "create-crate",
   "version": "0.0.1",
   "description": "Create a new crate CLI application",
-  "type": "module",
+  "keywords": [
+    "cli",
+    "crate",
+    "create",
+    "generator",
+    "scaffold",
+    "typescript"
+  ],
+  "license": "MIT",
   "bin": {
     "create-crate": "./dist/index.js"
   },
@@ -10,19 +18,16 @@
     "dist",
     "templates"
   ],
+  "type": "module",
   "scripts": {
     "build": "tsc",
-    "dev": "tsc --watch"
+    "dev": "tsc --watch",
+    "fmt": "oxfmt",
+    "fmt:check": "oxfmt --check",
+    "lint": "oxlint",
+    "lint:fix": "oxlint --fix",
+    "typecheck": "tsc --noEmit"
   },
-  "keywords": [
-    "crate",
-    "cli",
-    "scaffold",
-    "generator",
-    "create",
-    "typescript"
-  ],
-  "license": "MIT",
   "dependencies": {
     "@bomb.sh/args": "^0.3.1",
     "@clack/prompts": "^0.10.0",

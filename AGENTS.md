@@ -1,10 +1,13 @@
 <!-- Added: 2026-04-04 -->
+
 ## Project Overview
+
 This is **crate**, a TypeScript CLI framework with file-based routing built on @bomb.sh/args and Standard Schema.
 
 ## Architecture Decisions
 
 ### File-Based Routing
+
 Commands are defined by folders containing a `+command.ts` file. This enables co-locating route-specific utilities with their commands.
 
 - **Folder structure defines routes**: `commands/db/migrate/+command.ts` → `my-cli db migrate`
@@ -13,6 +16,7 @@ Commands are defined by folders containing a `+command.ts` file. This enables co
 - **Route parameters** are available in `ctx.flags` (e.g., `ctx.flags.id`)
 
 ### Benefits of Folder-Based Routing
+
 ```
 commands/
 ├── deploy/
@@ -31,18 +35,22 @@ commands/
 ```
 
 ### Schema Integration
+
 - Uses Standard Schema (@standard-schema/spec) for validation
 - Supports any Standard Schema-compatible library (Zod, Valibot, ArkType, etc.)
 - Flag types are auto-detected from Zod schemas (boolean, string, array)
 - Defaults are extracted from schema definitions
 
 ### Argument Parsing
+
 - Built on @bomb.sh/args (<1kB, fast)
 - Two-phase parsing: @bomb.sh/args for CLI parsing, Standard Schema for validation
 - Router matches command path, remaining args are parsed by the command
 
 ### Context Object
+
 Commands receive a context with:
+
 - stdin, stdout, stderr (direct Node.js streams)
 - args: parsed positional arguments
 - flags: parsed flags (includes dynamic route params)
@@ -50,6 +58,7 @@ Commands receive a context with:
 - log/error: helper functions for output
 
 ## Project Structure
+
 ```
 src/
 ├── index.ts      # Main runner and command execution
@@ -84,9 +93,9 @@ export default defineCommand({
     examples: ["my-cli deploy production --force"],
   },
   async run({ args, flags, log }) {
-    const [target] = args;  // Fully typed as [string]
+    const [target] = args; // Fully typed as [string]
     log(`Deploying to ${target}...`);
-    if (flags.force) log("Force mode!");  // Fully typed as boolean
+    if (flags.force) log("Force mode!"); // Fully typed as boolean
   },
 });
 ```
@@ -111,6 +120,7 @@ export default defineCommand({
 ```
 
 <!-- Added: 2026-04-04 -->
+
 ## Schema Introspection via JSON Schema
 
 The framework now uses JSON Schema export for library-agnostic schema introspection instead of Zod-specific internal APIs.
@@ -118,7 +128,9 @@ The framework now uses JSON Schema export for library-agnostic schema introspect
 ### Supported Libraries
 
 #### Zod v4+
+
 Native support via `.toJSONSchema()` method:
+
 ```typescript
 import { z } from "zod";
 import { defineCommand } from "@hacksaw/crate";
@@ -139,7 +151,9 @@ export default defineCommand({
 ```
 
 #### ArkType
+
 Native support via `.toJsonSchema()` method:
+
 ```typescript
 import { type } from "arktype";
 import { defineCommand } from "@hacksaw/crate";
@@ -160,6 +174,7 @@ export default defineCommand({
 ```
 
 #### Valibot
+
 Requires `@valibot/to-json-schema` package. Since Valibot keeps bundle size minimal by design, JSON Schema export is provided via a separate package:
 
 ```typescript
@@ -187,6 +202,7 @@ export default defineCommand({
 ```
 
 Or use explicit configuration (no extra package needed):
+
 ```typescript
 import * as v from "valibot";
 import { defineCommand } from "@hacksaw/crate";
@@ -212,11 +228,13 @@ export default defineCommand({
 ```
 
 <!-- Added: 2026-04-04 -->
+
 ## Valibot JSON Schema Support
 
 Valibot requires the `@valibot/to-json-schema` package for JSON Schema export since Valibot keeps bundle size minimal by design. Users have two options:
 
 ### Option 1: Attach JSON Schema Generator (Auto-Detection)
+
 ```typescript
 import * as v from "valibot";
 import { toJsonSchema } from "@valibot/to-json-schema";
@@ -239,6 +257,7 @@ export default defineCommand({
 ```
 
 ### Option 2: Explicit Configuration (No Extra Package)
+
 ```typescript
 import * as v from "valibot";
 import { defineCommand } from "@hacksaw/crate";
@@ -262,11 +281,13 @@ export default defineCommand({
 ```
 
 The framework detects JSON Schema via:
+
 - `schema.toJSONSchema()` - Zod v4+ native method
 - `schema.toJsonSchema()` - ArkType native method, or user-attached function for Valibot
 - `schema['~standard'].getJSONSchema()` - StandardJSONSchemaV1 spec
 
 ### How It Works
+
 1. The framework attempts to extract JSON Schema from schema objects using:
    - `schema.toJSONSchema()` (Zod v4+ style)
    - `schema.toJsonSchema()` (ArkType style, or user-attached function)
@@ -280,6 +301,7 @@ The framework detects JSON Schema via:
 3. If extraction fails, a warning is shown and explicit `argTypes` can be provided as fallback.
 
 ### Migration Notes
+
 - **Zod v3**: Upgrade to v4 or provide explicit `argTypes`
 - **Valibot**: Install `@valibot/to-json-schema` or use explicit configuration
 - **Others**: Provide explicit `argTypes` and `defaults` in command definitions

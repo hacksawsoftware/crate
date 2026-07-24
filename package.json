@@ -2,21 +2,39 @@
   "name": "crate-monorepo",
   "private": true,
   "description": "Monorepo for crate - File-based routing CLI metaframework",
+  "keywords": [
+    "cli",
+    "framework",
+    "monorepo",
+    "routing",
+    "typescript"
+  ],
+  "license": "MIT",
   "type": "module",
   "scripts": {
     "build": "pnpm --filter crate build",
     "build:create": "pnpm --filter create-crate build",
     "dev": "pnpm --filter crate dev",
     "test": "pnpm --filter crate test",
-    "example": "pnpm --filter crate example"
+    "example": "pnpm --filter crate example",
+    "fmt": "oxfmt",
+    "fmt:check": "oxfmt --check",
+    "lint": "oxlint",
+    "lint:fix": "oxlint --fix",
+    "typecheck": "pnpm --filter @hacksaw/crate exec tsc --noEmit && pnpm --filter create-crate exec tsc --noEmit",
+    "prepare": "husky"
   },
-  "keywords": [
-    "cli",
-    "framework",
-    "routing",
-    "typescript",
-    "monorepo"
-  ],
-  "license": "MIT",
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^17.2.0",
+    "oxfmt": "^0.43.0",
+    "oxlint": "^1.58.0"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "oxfmt --",
+      "oxlint --"
+    ]
+  },
   "packageManager": "pnpm@10.15.1"
 }

@@ -6,7 +6,10 @@ export default defineCommand({
   flags: z.object({}),
   hooks: {
     onError: (error, ctx) => {
-      ctx.log?.("[COMMAND HOOK] onError caught but not swallowing:", error instanceof Error ? error.message : error);
+      ctx.log?.(
+        "[COMMAND HOOK] onError caught but not swallowing:",
+        error instanceof Error ? error.message : error,
+      );
       // Don't swallow - return false/void
       return false;
     },

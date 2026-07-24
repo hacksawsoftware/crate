@@ -113,7 +113,9 @@ async function gatherConfig(): Promise<ProjectConfig> {
 
     const schemaLibrary = (flags.schema || "zod").toLowerCase() as ProjectConfig["schemaLibrary"];
     if (!["zod", "valibot", "arktype", "none"].includes(schemaLibrary)) {
-      console.error(`Error: Invalid schema library "${schemaLibrary}". Choose: zod, valibot, arktype, none`);
+      console.error(
+        `Error: Invalid schema library "${schemaLibrary}". Choose: zod, valibot, arktype, none`,
+      );
       process.exit(1);
     }
 
@@ -153,13 +155,13 @@ async function gatherConfig(): Promise<ProjectConfig> {
         name
           ? Promise.resolve(name)
           : p.text({
-            message: "What is your project name?",
-            placeholder: "my-cli",
-            validate: (value) => {
-              if (!value) return "Please enter a project name.";
-              return validatePackageName(value);
-            },
-          }),
+              message: "What is your project name?",
+              placeholder: "my-cli",
+              validate: (value) => {
+                if (!value) return "Please enter a project name.";
+                return validatePackageName(value);
+              },
+            }),
       description: () =>
         p.text({
           message: "What is your project description?",
@@ -213,7 +215,7 @@ async function gatherConfig(): Promise<ProjectConfig> {
         p.cancel("Operation cancelled.");
         process.exit(0);
       },
-    }
+    },
   );
 
   // Use the name from CLI if provided, otherwise from prompt
@@ -304,7 +306,7 @@ function generateTsConfig(): string {
       exclude: ["node_modules", "dist"],
     },
     null,
-    2
+    2,
   );
 }
 
@@ -341,7 +343,7 @@ export default defineCommand({
       log("Running in verbose mode");
     }
     log("Hello from ${config.name}!");
-    log("Run \\`${cliName} --help\\` to see available commands");
+    log("Run \`${cliName} --help\` to see available commands");
   },
 });
 `;
@@ -365,7 +367,7 @@ export default defineCommand({
       log("Running in verbose mode");
     }
     log("Hello from ${config.name}!");
-    log("Run \\`${cliName} --help\\` to see available commands");
+    log("Run \`${cliName} --help\` to see available commands");
   },
 });
 `;
@@ -389,7 +391,7 @@ export default defineCommand({
       log("Running in verbose mode");
     }
     log("Hello from ${config.name}!");
-    log("Run \\`${cliName} --help\\` to see available commands");
+    log("Run \`${cliName} --help\` to see available commands");
   },
 });
 `;
@@ -414,7 +416,7 @@ export default defineCommand({
       log("Running in verbose mode");
     }
     log("Hello from ${config.name}!");
-    log("Run \\`${cliName} --help\\` to see available commands");
+    log("Run \`${cliName} --help\` to see available commands");
   },
 });
 `;
@@ -704,20 +706,11 @@ async function scaffoldProject(config: ProjectConfig): Promise<void> {
   await mkdir(join(projectDir, "commands"), { recursive: true });
 
   // Write files
-  await writeFile(
-    join(projectDir, "package.json"),
-    generatePackageJson(config)
-  );
+  await writeFile(join(projectDir, "package.json"), generatePackageJson(config));
   await writeFile(join(projectDir, "tsconfig.json"), generateTsConfig());
   await writeFile(join(projectDir, "cli.ts"), generateCliTs(config));
-  await writeFile(
-    join(projectDir, "commands", "index.ts"),
-    generateIndexCommand(config)
-  );
-  await writeFile(
-    join(projectDir, "commands", "greet.ts"),
-    generateExampleCommand(config)
-  );
+  await writeFile(join(projectDir, "commands", "index.ts"), generateIndexCommand(config));
+  await writeFile(join(projectDir, "commands", "greet.ts"), generateExampleCommand(config));
   await writeFile(join(projectDir, "README.md"), generateReadme(config));
   await writeFile(join(projectDir, ".gitignore"), generateGitignore());
 

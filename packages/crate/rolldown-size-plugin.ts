@@ -26,13 +26,12 @@ export function bundleSizeReporterPlugin(): Plugin {
       // Report JS files from the bundle (what Rolldown generated)
       for (const [fileName, chunk] of Object.entries(bundle)) {
         if (chunk.type === "chunk" || chunk.type === "asset") {
-          const size = chunk.type === "chunk"
-            ? Buffer.byteLength(chunk.code, "utf-8")
-            : Buffer.byteLength(chunk.source);
+          const size =
+            chunk.type === "chunk"
+              ? Buffer.byteLength(chunk.code, "utf-8")
+              : Buffer.byteLength(chunk.source);
 
-          const type: BundleFile["type"] = fileName.endsWith(".js")
-            ? "runtime"
-            : "map";
+          const type: BundleFile["type"] = fileName.endsWith(".js") ? "runtime" : "map";
 
           files.push({ fileName, size, type });
 

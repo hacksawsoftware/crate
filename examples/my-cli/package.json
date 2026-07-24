@@ -2,10 +2,10 @@
   "name": "my-cli-example",
   "version": "1.0.0",
   "description": "Example CLI demonstrating crate file-based routing",
-  "type": "module",
   "bin": {
     "my-cli": "./dist/cli.js"
   },
+  "type": "module",
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
