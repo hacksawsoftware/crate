@@ -50,24 +50,24 @@ npm create crate my-cli \
 
 ## CLI Options
 
-| Flag | Description | Default |
-|------|-------------|---------|
-| `--name` | Project name | Prompt if not provided |
-| `--description` | Project description | `"A crate CLI application"` |
-| `--version` | Initial version | `"0.1.0"` |
-| `--author` | Author name | `""` |
-| `--license` | License type | `"MIT"` |
-| `--schema` | Schema library (zod, valibot, arktype, none) | `zod` |
-| `--install` / `--no-install` | Install dependencies | `true` |
-| `--yes`, `-y` | Use all defaults (non-interactive) | `false` |
-| `--help`, `-h` | Show help | - |
+| Flag                         | Description                                  | Default                     |
+| ---------------------------- | -------------------------------------------- | --------------------------- |
+| `--name`                     | Project name                                 | Prompt if not provided      |
+| `--description`              | Project description                          | `"A crate CLI application"` |
+| `--version`                  | Initial version                              | `"0.1.0"`                   |
+| `--author`                   | Author name                                  | `""`                        |
+| `--license`                  | License type                                 | `"MIT"`                     |
+| `--schema`                   | Schema library (zod, valibot, arktype, none) | `zod`                       |
+| `--install` / `--no-install` | Install dependencies                         | `true`                      |
+| `--yes`, `-y`                | Use all defaults (non-interactive)           | `false`                     |
+| `--help`, `-h`               | Show help                                    | -                           |
 
 ## Schema Libraries
 
 The following validation libraries are supported:
 
 - **zod** - Most popular, great TypeScript support
-- **valibot** - Smaller bundle size, tree-shakeable  
+- **valibot** - Smaller bundle size, tree-shakeable
 - **arktype** - TypeScript-native, no separate validation needed
 - **none** - No schema library (uses explicit argTypes)
 

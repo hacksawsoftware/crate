@@ -50,27 +50,30 @@ export default defineCommand({
     examples: ["my-cli deploy production --force"],
   },
   async run({ args, flags, log }) {
-    const [target] = args;  // Fully typed as string
+    const [target] = args; // Fully typed as string
     log(`Deploying to ${target}...`);
-    
-    if (flags.force) {  // Fully typed as boolean
+
+    if (flags.force) {
+      // Fully typed as boolean
       log("Force mode enabled!");
     }
-    
-    if (flags.region) {  // Fully typed as string | undefined
+
+    if (flags.region) {
+      // Fully typed as string | undefined
       log(`Region: ${flags.region}`);
     }
   },
 });
 ```
-```
+
+````
 
 ### 3. Run your CLI
 
 ```bash
 # Using jiti (recommended for development)
 npx jiti cli.ts deploy production --force --region us-east-1
-```
+````
 
 ## File-Based Routing
 
@@ -108,7 +111,7 @@ import { defineCommand } from "@hacksaw/crate";
 export default defineCommand({
   flags: z.object({
     json: z.boolean().default(false),
-    id: z.string(),  // Include in schema for type safety
+    id: z.string(), // Include in schema for type safety
   }),
   meta: {
     description: "Get info by ID",
@@ -116,7 +119,7 @@ export default defineCommand({
   },
   async run({ flags, log }) {
     // Dynamic param is available via flags.id
-    const id = flags.id;  // Fully typed as string
+    const id = flags.id; // Fully typed as string
     log(`Getting info for ${id}`);
     if (flags.json) {
       log(JSON.stringify({ id }));
@@ -138,24 +141,21 @@ import { z } from "zod";
 export default defineCommand({
   // Positional arguments schema (tuple)
   args: z.tuple([z.string(), z.number().optional()]),
-  
+
   // Flags/options schema (object)
   flags: z.object({
     force: z.boolean().default(false),
     region: z.string(),
     tags: z.array(z.string()).default([]),
   }),
-  
+
   // Command metadata
   meta: {
     description: "Deploy the application",
-    examples: [
-      "my-cli deploy production",
-      "my-cli deploy staging --force"
-    ],
-    hidden: false,  // Set to true to hide from help listing
+    examples: ["my-cli deploy production", "my-cli deploy staging --force"],
+    hidden: false, // Set to true to hide from help listing
   },
-  
+
   // Command handler
   async run({ args, flags, log, error, stdin, stdout, stderr, rawArgv }) {
     const [target, retries] = args;
@@ -186,6 +186,7 @@ The `run` handler receives a context object with:
 Any Standard Schema-compatible library works. The framework automatically detects argument types when possible, but you can also provide explicit configuration.
 
 ### Zod (v4+)
+
 Zod v4+ includes native JSON Schema export. Auto-detection works out of the box:
 
 ```typescript
@@ -202,7 +203,7 @@ export default defineCommand({
   }),
   meta: { description: "Example command" },
   async run({ args, flags, log }) {
-    const [target] = args;  // string
+    const [target] = args; // string
     log(`Name: ${flags.name}, Count: ${flags.count}`);
   },
 });
@@ -211,6 +212,7 @@ export default defineCommand({
 > **Note**: Zod v3 users should upgrade to v4 or provide explicit `argTypes` configuration.
 
 ### Valibot
+
 Valibot requires the `@valibot/to-json-schema` package for JSON Schema export (kept separate to minimize bundle size):
 
 ```bash
@@ -218,6 +220,9 @@ npm install @valibot/to-json-schema
 ```
 
 #### Option 1: Attach JSON Schema Generator (Auto-Detection)
+
+When you provide `toJSONSchema`, crate automatically detects which flags are booleans, strings, and arrays from the generated JSON Schema — no explicit `argTypes` needed:
+
 ```typescript
 import { defineCommand } from "@hacksaw/crate";
 import * as v from "valibot";
@@ -232,7 +237,7 @@ const flagsSchema = v.object({
 
 export default defineCommand({
   flags: flagsSchema,
-  // Attach the JSON Schema generator for auto-detection
+  // Provide a generator so crate can introspect flag types automatically
   toJSONSchema: () => toJsonSchema(flagsSchema),
   meta: { description: "Example command" },
   async run({ flags, log }) {
@@ -242,6 +247,7 @@ export default defineCommand({
 ```
 
 #### Option 2: Explicit Configuration (No Extra Package)
+
 ```typescript
 import { defineCommand } from "@hacksaw/crate";
 import * as v from "valibot";
@@ -272,6 +278,7 @@ export default defineCommand({
 ```
 
 ### ArkType
+
 ArkType includes native JSON Schema export. Auto-detection works out of the box:
 
 ```typescript
@@ -288,13 +295,14 @@ export default defineCommand({
   }),
   meta: { description: "Example command" },
   async run({ args, flags, log }) {
-    const [target] = args;  // string
+    const [target] = args; // string
     log(`Name: ${flags.name}, Count: ${flags.count}`);
   },
 });
 ```
 
 ### Explicit Configuration
+
 For any library, you can provide explicit argument types:
 
 ```typescript
@@ -303,9 +311,9 @@ import { defineCommand } from "@hacksaw/crate";
 export default defineCommand({
   // Your schema here
   argTypes: {
-    boolean: ["force", "verbose"],  // Flags that don't take values
-    string: ["name", "region"],       // Flags that take single values
-    array: ["tags"],                  // Flags that can repeat (--tags a --tags b)
+    boolean: ["force", "verbose"], // Flags that don't take values
+    string: ["name", "region"], // Flags that take single values
+    array: ["tags"], // Flags that can repeat (--tags a --tags b)
   },
   defaults: {
     force: false,
@@ -323,10 +331,10 @@ export default defineCommand({
 
 ```typescript
 run({
-  name: "my-cli",              // CLI name (required)
-  version: "1.0.0",            // Version string
-  description: "A great CLI",    // Description for help text
-  commandsDir: "./commands",     // Directory containing commands (default: "commands")
+  name: "my-cli", // CLI name (required)
+  version: "1.0.0", // Version string
+  description: "A great CLI", // Description for help text
+  commandsDir: "./commands", // Directory containing commands (default: "commands")
 });
 ```
 
@@ -369,10 +377,10 @@ Starts the CLI and handles command routing and execution.
 import { run } from "@hacksaw/crate";
 
 run({
-  name: "my-cli",              // CLI name (required)
-  version: "1.0.0",            // Version string
-  description: "A great CLI",  // Description for help text
-  commandsDir: "./commands",    // Directory containing commands (default: "commands")
+  name: "my-cli", // CLI name (required)
+  version: "1.0.0", // Version string
+  description: "A great CLI", // Description for help text
+  commandsDir: "./commands", // Directory containing commands (default: "commands")
 });
 ```
 
@@ -386,23 +394,25 @@ import { z } from "zod";
 
 export default defineCommand({
   args: z.tuple([z.string()]),
-  flags: z.object({ 
+  flags: z.object({
     force: z.boolean().default(false),
     region: z.string(),
     tags: z.array(z.string()).default([]),
   }),
-  meta: { 
+  meta: {
     description: "Deploy",
     examples: ["my-cli deploy production --force"],
   },
   async run({ args, flags, log }) {
     // Fully typed!
-    const [target] = args;        // string
-    if (flags.force) {            // boolean
+    const [target] = args; // string
+    if (flags.force) {
+      // boolean
       log("Forcing!");
     }
-    log(`Region: ${flags.region}`);  // string
-    flags.tags.forEach(tag => {   // string[]
+    log(`Region: ${flags.region}`); // string
+    flags.tags.forEach((tag) => {
+      // string[]
       log(`Tag: ${tag}`);
     });
   },
@@ -412,16 +422,17 @@ export default defineCommand({
 ### Utility Functions
 
 ```typescript
-import { 
-  scanCommands,     // Scan commands directory
-  matchRoute,       // Match argv to routes
-  validateWithSchema // Validate data against a schema
+import {
+  scanCommands, // Scan commands directory
+  matchRoute, // Match argv to routes
+  validateWithSchema, // Validate data against a schema
 } from "@hacksaw/crate";
 ```
 
 ## Example
 
 See the `examples/my-cli` directory for a complete working example with:
+
 - Root command with optional flags (`commands/+command.ts`)
 - Static subcommands (`commands/deploy/+command.ts`, `commands/db/migrate/+command.ts`)
 - Dynamic subcommands (`commands/info/[id]/+command.ts`)

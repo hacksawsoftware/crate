@@ -36,9 +36,7 @@ async function scanDir(
   const entries = await readdir(dir, { withFileTypes: true });
 
   // First, check if there's a +command.ts file in the current directory
-  const commandFile = entries.find(
-    (entry) => entry.isFile() && isCommandFile(entry.name),
-  );
+  const commandFile = entries.find((entry) => entry.isFile() && isCommandFile(entry.name));
 
   if (commandFile) {
     // This directory contains a command
@@ -77,11 +75,10 @@ async function scanDir(
   for (const entry of entries) {
     if (entry.isDirectory()) {
       const segment = entry.name;
-      const subRoutes = await scanDir(
-        join(dir, entry.name),
-        baseDir,
-        [...currentSegments, segment],
-      );
+      const subRoutes = await scanDir(join(dir, entry.name), baseDir, [
+        ...currentSegments,
+        segment,
+      ]);
       routes.push(...subRoutes);
     }
   }

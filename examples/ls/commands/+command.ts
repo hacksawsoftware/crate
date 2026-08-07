@@ -21,7 +21,12 @@ function formatDate(date: Date): string {
   if (days === 0) {
     return date.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
   } else if (days < 365) {
-    return date.toLocaleDateString("en-US", { month: "short", day: "2-digit", hour: "2-digit", minute: "2-digit" });
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   } else {
     return date.toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" });
   }
@@ -133,7 +138,9 @@ export default defineCommand({
           const indicator = getIndicator(file.stats, flags as { classify: boolean });
           const typeIndicator = file.isDir ? "d" : file.isLink ? "l" : "-";
           const perms = process.platform === "win32" ? "---" : "rwxrwxrwx"; // Simplified
-          log(`${typeIndicator}${perms} ${size.padStart(6)} ${date.padStart(20)} ${file.name}${indicator}`);
+          log(
+            `${typeIndicator}${perms} ${size.padStart(6)} ${date.padStart(20)} ${file.name}${indicator}`,
+          );
         }
       } else {
         // Simple format

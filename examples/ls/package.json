@@ -2,10 +2,10 @@
   "name": "ls-example",
   "version": "1.0.0",
   "description": "Basic ls implementation using valibot for schema validation",
-  "type": "module",
   "bin": {
     "ls-example": "./dist/cli.js"
   },
+  "type": "module",
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",

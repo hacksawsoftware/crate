@@ -33,16 +33,16 @@ export default defineCommand({
   async run({ args, flags, log }) {
     const [name] = args;
     log(`Hello ${name}!`);
-    
+
     if (flags.verbose) {
       log("Verbose mode enabled");
     }
-    
+
     // Check if hook modified the context
     if ((flags as Record<string, unknown>).hookModified) {
       log("✅ Context was modified by beforeRun hook");
     }
-    
+
     log("Command executed successfully!");
   },
 });
