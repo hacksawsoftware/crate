@@ -384,6 +384,10 @@ run({
 });
 ```
 
+> **Note:** Relative `commandsDir` paths (including the default `"commands"`) are resolved
+> against the file that calls `run()`, so your CLI works regardless of the current
+> working directory. Absolute paths pass through unchanged.
+
 ### `defineCommand(def)`
 
 **This is the primary API for defining commands.** It provides full type inference from your schema:

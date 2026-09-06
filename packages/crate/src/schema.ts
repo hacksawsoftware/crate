@@ -368,10 +368,10 @@ export interface ExtractFlagsResult {
 export function extractSchemaFlags(
   schema: unknown,
   explicitConfig?: {
-    boolean?: string[];
-    string?: string[];
-    array?: string[];
-    defaults?: Record<string, unknown>;
+    boolean?: string[] | undefined;
+    string?: string[] | undefined;
+    array?: string[] | undefined;
+    defaults?: Record<string, unknown> | undefined;
   },
   toJSONSchema?: () => object,
 ): ExtractFlagsResult {

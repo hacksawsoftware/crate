@@ -1,5 +1,7 @@
-import { describe, it, expect } from "vitest";
-import { defineCommand } from "./define.js";
+import { describe, it, expect, expectTypeOf } from "vitest";
+import * as v from "valibot";
+import { z } from "zod";
+import { defineCommand, type InferOutput } from "./define.js";
 import { extractSchemaFlags } from "./schema.js";
 
 describe("defineCommand toJSONSchema integration", () => {
@@ -96,5 +98,76 @@ describe("defineCommand toJSONSchema integration", () => {
     );
 
     expect(result.success).toBe(true);
+  });
+});
+
+describe("defineCommand schema library acceptance (issue #5)", () => {
+  it("accepts Valibot schemas for args and flags", () => {
+    const argsSchema = v.tuple([v.string()]);
+    const flagsSchema = v.object({ force: v.boolean(), region: v.string() });
+
+    const command = defineCommand({
+      args: argsSchema,
+      flags: flagsSchema,
+      async run() {},
+    });
+
+    expect(command.args).toBe(argsSchema);
+    expect(command.flags).toBe(flagsSchema);
+  });
+
+  it("accepts the empty Valibot tuple/object repro from issue #5", () => {
+    const command = defineCommand({
+      args: v.tuple([]),
+      flags: v.object({}),
+      run() {},
+    });
+
+    expect(command.args).toBeDefined();
+    expect(command.flags).toBeDefined();
+  });
+
+  it("infers Valibot output types for ctx.args and ctx.flags", () => {
+    const command = defineCommand({
+      args: v.tuple([v.string()]),
+      flags: v.object({ force: v.boolean() }),
+      async run({ args, flags }) {
+        expectTypeOf(args).toEqualTypeOf<[string]>();
+        expectTypeOf(flags).toEqualTypeOf<{ force: boolean }>();
+      },
+    });
+
+    expect(command.args).toBeDefined();
+    expect(command.flags).toBeDefined();
+  });
+
+  it("InferOutput extracts output types from Valibot schemas", () => {
+    const argsSchema = v.tuple([v.string()]);
+    const flagsSchema = v.object({ force: v.boolean() });
+
+    type InferredArgs = InferOutput<typeof argsSchema>;
+    type InferredFlags = InferOutput<typeof flagsSchema>;
+
+    const args: InferredArgs = ["hello"];
+    const flags: InferredFlags = { force: true };
+
+    expect(args).toEqual(["hello"]);
+    expect(flags).toEqual({ force: true });
+  });
+
+  it("accepts Zod v4 schemas and infers output types", () => {
+    const argsSchema = z.tuple([z.string()]);
+    const flagsSchema = z.object({ force: z.boolean().default(false) });
+
+    const command = defineCommand({
+      args: argsSchema,
+      flags: flagsSchema,
+      async run({ flags }) {
+        expectTypeOf(flags).toEqualTypeOf<{ force: boolean }>();
+      },
+    });
+
+    expect(command.args).toBe(argsSchema);
+    expect(command.flags).toBe(flagsSchema);
   });
 });
