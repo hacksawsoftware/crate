@@ -7,11 +7,11 @@ export type { StandardSchemaV1 };
  */
 export interface ArgTypes {
   /** Flags that are treated as booleans (no value after them) */
-  boolean?: string[];
+  boolean?: string[] | undefined;
   /** Flags that are treated as strings (value after them) */
-  string?: string[];
+  string?: string[] | undefined;
   /** Flags that can be repeated (collect into array) */
-  array?: string[];
+  array?: string[] | undefined;
 }
 
 /**
@@ -19,21 +19,28 @@ export interface ArgTypes {
  */
 export interface Hooks {
   /** Called before route matching - can modify argv */
-  beforeMatch?: (ctx: {
-    argv: string[];
-  }) => Promise<{ argv?: string[] } | void> | { argv?: string[] } | void;
+  beforeMatch?:
+    | ((ctx: {
+        argv: string[];
+      }) =>
+        | Promise<{ argv?: string[] | undefined } | void>
+        | { argv?: string[] | undefined }
+        | void)
+    | undefined;
 
   /** Called after route match, before loading command */
-  beforeLoad?: (ctx: { route: CommandRoute; argv: string[] }) => Promise<void> | void;
+  beforeLoad?: ((ctx: { route: CommandRoute; argv: string[] }) => Promise<void> | void) | undefined;
 
   /** Called before command execution - can modify context (middleware pattern) */
-  beforeRun?: (ctx: Context) => Promise<Context | void> | Context | void;
+  beforeRun?: ((ctx: Context) => Promise<Context | void> | Context | void) | undefined;
 
   /** Called after successful command execution */
-  afterRun?: (ctx: Context) => Promise<void> | void;
+  afterRun?: ((ctx: Context) => Promise<void> | void) | undefined;
 
   /** Called on any error - return true to swallow error (prevent exit) */
-  onError?: (error: unknown, ctx: Partial<Context>) => Promise<boolean | void> | boolean | void;
+  onError?:
+    | ((error: unknown, ctx: Partial<Context>) => Promise<boolean | void> | boolean | void)
+    | undefined;
 }
 
 /**
@@ -88,33 +95,33 @@ export interface CommandDefinition {
   /** The command handler function (default export) */
   default: CommandHandler;
   /** Positional arguments schema (Standard Schema compatible) */
-  args?: StandardSchemaV1<unknown, unknown[]>;
+  args?: StandardSchemaV1<unknown, unknown[]> | undefined;
   /** Flags/options schema (Standard Schema compatible) */
-  flags?: StandardSchemaV1<unknown, Record<string, unknown>>;
+  flags?: StandardSchemaV1<unknown, Record<string, unknown>> | undefined;
   /** Command metadata */
-  meta?: CommandMeta;
+  meta?: CommandMeta | undefined;
   /**
    * Explicit argument types for CLI parsing.
    * Only needed if the schema library doesn't support JSON Schema export.
    * Most libraries (Zod v4+, ArkType, Valibot with @valibot/to-json-schema)
    * will auto-detect types from the schema.
    */
-  argTypes?: ArgTypes;
+  argTypes?: ArgTypes | undefined;
   /**
    * Default values for flags.
    * Usually auto-detected from schema, but can be overridden here.
    */
-  defaults?: Record<string, unknown>;
+  defaults?: Record<string, unknown> | undefined;
   /**
    * Optional JSON Schema generator function for libraries like Valibot
    * that don't have native JSON Schema export on the schema object itself.
    */
-  toJSONSchema?: JSONSchemaGenerator;
+  toJSONSchema?: JSONSchemaGenerator | undefined;
   /**
    * Lifecycle hooks for this specific command.
    * These run inside CLI-level hooks (bubble up pattern).
    */
-  hooks?: Hooks;
+  hooks?: Hooks | undefined;
 }
 
 /**
@@ -138,14 +145,18 @@ export interface CliConfig {
   /** Name of the CLI (used in help text) */
   name: string;
   /** Version string */
-  version?: string;
+  version?: string | undefined;
   /** Description */
-  description?: string;
-  /** Directory containing command files (default: 'commands') */
-  commandsDir?: string;
+  description?: string | undefined;
+  /**
+   * Directory containing command files (default: 'commands').
+   * Relative paths are resolved against the file that calls run(),
+   * so CLIs work regardless of the current working directory.
+   */
+  commandsDir?: string | undefined;
   /**
    * Global lifecycle hooks for all commands.
    * These run outside command-level hooks (bubble up pattern).
    */
-  hooks?: Hooks;
+  hooks?: Hooks | undefined;
 }

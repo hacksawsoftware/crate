@@ -1,28 +1,27 @@
+import type { StandardSchemaV1 } from "@standard-schema/spec";
 import type { ArgTypes, CommandDefinition, Context, JSONSchemaGenerator, Hooks } from "./types.js";
 
 /**
  * Helper type to extract the output type from a Standard Schema.
  */
-export type InferOutput<T> = T extends { "~standard": { types: { output: infer O } } }
-  ? O
-  : T extends { _zod: { output: infer O } } // Fallback for Zod
+export type InferOutput<T> =
+  T extends StandardSchemaV1<unknown, infer O>
     ? O
-    : unknown;
+    : T extends { _zod: { output: infer O } } // Fallback for Zod internals
+      ? O
+      : unknown;
 
 /**
  * Command definition with type inference from Standard Schema.
  */
 interface TypedCommandDefinition<TArgs = unknown, TFlags = Record<string, unknown>> {
-  args?: { "~standard": { types?: { output: TArgs } } } | { _zod: { output: TArgs } } | undefined;
-  flags?:
-    | { "~standard": { types?: { output: TFlags } } }
-    | { _zod: { output: TFlags } }
-    | undefined;
-  argTypes?: ArgTypes;
-  defaults?: Record<string, unknown>;
-  toJSONSchema?: JSONSchemaGenerator;
-  meta?: { description?: string; examples?: string[]; hidden?: boolean };
-  hooks?: Hooks;
+  args?: StandardSchemaV1<unknown, TArgs> | { _zod: { output: TArgs } } | undefined;
+  flags?: StandardSchemaV1<unknown, TFlags> | { _zod: { output: TFlags } } | undefined;
+  argTypes?: ArgTypes | undefined;
+  defaults?: Record<string, unknown> | undefined;
+  toJSONSchema?: JSONSchemaGenerator | undefined;
+  meta?: { description?: string; examples?: string[]; hidden?: boolean } | undefined;
+  hooks?: Hooks | undefined;
   run: (ctx: TypedContext<TArgs, TFlags>) => Promise<void> | void;
 }
 

@@ -1,4 +1,5 @@
-import { pathToFileURL } from "node:url";
+import { pathToFileURL, fileURLToPath } from "node:url";
+import { dirname, isAbsolute, join } from "node:path";
 import { stdin, stdout, stderr } from "node:process";
 import { parse } from "@bomb.sh/args";
 import type {
@@ -245,6 +246,51 @@ function printCommandHelp(
 }
 
 /**
+ * Get the file path of the module that called run(), if determinable.
+ *
+ * Uses the V8 stack API to skip the run() frame itself. Returns null when the
+ * caller cannot be determined (e.g. non-V8 runtimes without these extensions),
+ * in which case callers fall back to the previous cwd-relative behavior.
+ */
+function getCallerFilePath(): string | null {
+  const originalPrepareStackTrace = Error.prepareStackTrace;
+  try {
+    Error.prepareStackTrace = (_error, stack) => stack;
+    const holder = {} as { stack: NodeJS.CallSite[] };
+    Error.captureStackTrace(holder, run);
+    for (const site of holder.stack) {
+      const fileName = site.getFileName();
+      if (!fileName || fileName.startsWith("node:") || fileName.startsWith("internal:")) {
+        continue;
+      }
+      return fileName.startsWith("file://") ? fileURLToPath(fileName) : fileName;
+    }
+    return null;
+  } catch {
+    return null;
+  } finally {
+    Error.prepareStackTrace = originalPrepareStackTrace;
+  }
+}
+
+/**
+ * Resolve the commands directory against the file that calls run(), so CLIs
+ * work regardless of the process working directory. Absolute paths pass
+ * through unchanged; falls back to cwd-relative resolution when the caller
+ * cannot be determined.
+ */
+function resolveCommandsDir(commandsDir: string): string {
+  if (isAbsolute(commandsDir)) {
+    return commandsDir;
+  }
+  const callerFilePath = getCallerFilePath();
+  if (!callerFilePath) {
+    return commandsDir;
+  }
+  return join(dirname(callerFilePath), commandsDir);
+}
+
+/**
  * Run the CLI
  */
 export async function run(config: CliConfig): Promise<void> {
@@ -254,7 +300,7 @@ export async function run(config: CliConfig): Promise<void> {
   let partialCtx: Partial<Context> = {};
 
   try {
-    const commandsDir = config.commandsDir ?? "commands";
+    const commandsDir = resolveCommandsDir(config.commandsDir ?? "commands");
 
     // Scan for commands
     const routes = await scanCommands(commandsDir);
